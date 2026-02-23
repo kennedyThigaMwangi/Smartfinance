@@ -1,5 +1,10 @@
-# Full Stack AI Fianace Platform with Next JS, Supabase, Tailwind, Prisma, Inngest, ArcJet, Shadcn UI Tutorial 🔥🔥
-## https://youtu.be/egS6fnZAdzk
+# Full Stack AI Fianace Manegment System  calles SmartFinance
+
+SmartFinance is a full-stack AI-powered Personal Finance Management System built with modern web technologies.
+
+It helps users track income, expenses, budgets, and financial insights in a smart and organized way.
+
+
 
 <img width="1470" alt="Screenshot 2024-12-10 at 9 45 45 AM" src="https://github.com/user-attachments/assets/1bc50b85-b421-4122-8ba4-ae68b2b61432">
 
@@ -22,3 +27,79 @@ RESEND_API_KEY=
 
 ARCJET_KEY=
 ```
+
+---
+
+## 🚀 Features
+
+- 🔐 Authentication system
+- 📊 Dashboard for financial overview
+- 💸 Add & manage transactions
+- 📈 Expense tracking
+- 🤖 AI-powered features (if enabled)
+- 🎨 Modern UI with Tailwind CSS
+- 🗄 Database integration with Prisma
+- ⚡ Built with performance in mind
+
+---
+
+## 🛠 Tech Stack
+
+- Next.js
+- React
+- Tailwind CSS
+- Prisma
+- Node.js
+- PostgreSQL (or your database)
+- Git & GitHub
+
+---
+
+## 📦 Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/kennedyThigaMwangi/Smartfinance.git
+
+
+
+# 💰 SmartFinance
+
+SmartFinance is a full-stack AI-powered Personal Finance Management System built with modern web technologies.
+
+It helps users track income, expenses, budgets, and financial insights in a smart and organized way.
+
+---
+
+## 🚀 Features
+
+- 🔐 Authentication system
+- 📊 Dashboard for financial overview
+- 💸 Add & manage transactions
+- 📈 Expense tracking
+- 🤖 AI-powered features (if enabled)
+- 🎨 Modern UI with Tailwind CSS
+- 🗄 Database integration with Prisma
+- ⚡ Built with performance in mind
+
+---
+
+## 🛠 Tech Stack
+
+- Next.js
+- React
+- Tailwind CSS
+- Prisma
+- Node.js
+- PostgreSQL (or your database)
+- Git & GitHub
+
+---
+
+## 📦 Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/kennedyThigaMwangi/Smartfinance.git
