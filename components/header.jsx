@@ -16,9 +16,9 @@ const Header = async () => {
           <Image
             src={"/logo.png"}
             alt="Welth Logo"
-            width={200}
-            height={60}
-            className="h-12 w-auto object-contain"
+            width={400}
+            height={50}
+            className="h-20 w-auto object-contain"
           />
         </Link>
 
@@ -34,6 +34,13 @@ const Header = async () => {
             >
               Testimonials
             </a>
+            {/* Added About and Contact */}
+            <Link href="/about" className="text-gray-600 hover:text-blue-600">
+              About
+            </Link>
+            <Link href="/contact" className="text-gray-600 hover:text-blue-600">
+              Contact
+            </Link>
           </SignedOut>
         </div>
 

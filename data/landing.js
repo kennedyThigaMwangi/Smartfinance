@@ -10,11 +10,11 @@ import {
 // Stats Data
 export const statsData = [
   {
-    value: "50K+",
+    value: "5000+",
     label: "Active Users",
   },
   {
-    value: "$2B+",
+    value: "$2000+",
     label: "Transactions Tracked",
   },
   {
@@ -92,7 +92,7 @@ export const testimonialsData = [
     role: "Small Business Owner",
     image: "https://randomuser.me/api/portraits/women/75.jpg",
     quote:
-      "Welth has transformed how I manage my business finances. The AI insights have helped me identify cost-saving opportunities I never knew existed.",
+      "Smartfinance has transformed how I manage my business finances. The AI insights have helped me identify cost-saving opportunities I never knew existed.",
   },
   {
     name: "Michael Chen",
@@ -106,6 +106,6 @@ export const testimonialsData = [
     role: "Financial Advisor",
     image: "https://randomuser.me/api/portraits/women/74.jpg",
     quote:
-      "I recommend Welth to all my clients. The multi-currency support and detailed analytics make it perfect for international investors.",
+      "I recommend Smartfinance to all my clients. The multi-currency support and detailed analytics make it perfect for international investors.",
   },
 ];
