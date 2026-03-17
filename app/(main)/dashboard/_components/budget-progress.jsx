@@ -103,9 +103,9 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
               <>
                 <CardDescription>
                   {initialBudget
-                    ? `$${currentExpenses.toFixed(
+                    ? `KES ${currentExpenses.toFixed(
                         2
-                      )} of $${initialBudget.amount.toFixed(2)} spent`
+                      )} of KES ${initialBudget.amount.toFixed(2)} spent`
                     : "No budget set"}
                 </CardDescription>
                 <Button
@@ -127,12 +127,11 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
             <Progress
               value={percentUsed}
               extraStyles={`${
-                // add to Progress component
                 percentUsed >= 90
                   ? "bg-red-500"
                   : percentUsed >= 75
-                    ? "bg-yellow-500"
-                    : "bg-green-500"
+                  ? "bg-yellow-500"
+                  : "bg-green-500"
               }`}
             />
             <p className="text-xs text-muted-foreground text-right">

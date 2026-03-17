@@ -1,25 +1,16 @@
-"use server";
-
 import { db } from "@/lib/prisma";
 import { subDays } from "date-fns";
 
+// Users with accounts
 const USERS = [
-  {
-    userId: "874f87a6-0dd5-4ef8-8ff2-02ac9a4a3aa6",
-    accountId: "74c1ab76-62de-4a5b-bbcc-83a57e373b3b",
-  },
-  {
-    userId: "1ba841ab-a7b4-4686-8a90-ec8aa4d14454",
-    accountId: "74c1ab76-62de-4a5b-bbcc-83a57e373b3b",
-  },
-  {
-    userId: "third-user-id",
-    accountId: "third-account-id",
-  },
+  { userId: "874f87a6-0dd5-4ef8-8ff2-02ac9a4a3aa6", accountId: "74c1ab76-62de-4a5b-bbcc-83a57e373b3b" },
+  { userId: "1ba841ab-a7b4-4686-8a90-ec8aa4d14454", accountId: "74c1ab76-62de-4a5b-bbcc-83a57e373b3b" },
+  { userId: "3c5d12ab-cbfa-4c8e-b2b8-4a3c7c6a9e12", accountId: "8d2f0b34-ef2a-4d13-9f77-2c1e3d4a5678" },
+  { userId: "5f8a2d56-12b4-4f9c-b1a7-9c2e3d7f8910", accountId: "d1c3a5b6-789e-4f12-a1b2-5c7d8e9f0123" },
+  { userId: "7b6c9d23-0f2a-4a9b-b3c7-2e1f4d5a6789", accountId: "f2a1b3c4-5d6e-7f8a-9b0c-1d2e3f4a5678" },
 ];
 
-// Categories with their typical amount ranges
-
+// Categories same as Supabase version
 const CATEGORIES = {
   INCOME: [
     { name: "salary", range: [5000, 8000] },
@@ -59,12 +50,11 @@ const CATEGORIES = {
   ],
 };
 
-// Helper to generate random amount within a range
+// Random helpers
 function getRandomAmount(min, max) {
   return Number((Math.random() * (max - min) + min).toFixed(2));
 }
 
-// Helper to get random category with amount
 function getRandomCategory(type) {
   const categories = CATEGORIES[type];
   const category = categories[Math.floor(Math.random() * categories.length)];
@@ -72,69 +62,55 @@ function getRandomCategory(type) {
   return { category: category.name, amount };
 }
 
-export async function seedTransactions() {
-  try {
-    // Generate 90 days of transactions
-    const transactions = [];
-    let totalBalance = 0;
+// Seed function
+export async function seedMpesaPrisma() {
+  const transactions = [];
+  const TOTAL_TRANSACTIONS = 1000;
+  const DAYS_RANGE = 180;
 
-    for (let i = 90; i >= 0; i--) {
-      const date = subDays(new Date(), i);
+  for (let i = 0; i < TOTAL_TRANSACTIONS; i++) {
+    const randomDaysAgo = Math.floor(Math.random() * DAYS_RANGE);
+    const date = subDays(new Date(), randomDaysAgo);
 
-      // Generate 1-3 transactions per day
-      const transactionsPerDay = Math.floor(Math.random() * 3) + 1;
+    const type = Math.random() < 0.4 ? "INCOME" : "EXPENSE";
+    const { category, amount } = getRandomCategory(type);
+    const user = USERS[Math.floor(Math.random() * USERS.length)];
 
-      for (let j = 0; j < transactionsPerDay; j++) {
-        // 40% chance of income, 60% chance of expense
-        const type = Math.random() < 0.4 ? "INCOME" : "EXPENSE";
-        const { category, amount } = getRandomCategory(type);
-
-        const transaction = {
-          id: crypto.randomUUID(),
-          type,
-          amount,
-          description: `${
-            type === "INCOME" ? "Received" : "Paid for"
-          } ${category}`,
-          date,
-          category,
-          status: "COMPLETED",
-          userId: USER_ID,
-          accountId: ACCOUNT_ID,
-          createdAt: date,
-          updatedAt: date,
-        };
-
-        totalBalance += type === "INCOME" ? amount : -amount;
-        transactions.push(transaction);
-      }
-    }
-
-    // Insert transactions in batches and update account balance
-    await db.$transaction(async (tx) => {
-      // Clear existing transactions
-      await tx.transaction.deleteMany({
-        where: { accountId: ACCOUNT_ID },
-      });
-
-      // Insert new transactions
-      await tx.transaction.createMany({
-        data: transactions,
-      });
-
-      // Update account balance
-      await tx.account.update({
-        where: { id: ACCOUNT_ID },
-        data: { balance: totalBalance },
-      });
+    transactions.push({
+      id: crypto.randomUUID(),
+      type,
+      amount,
+      description: `${type === "INCOME" ? "Received via M-Pesa" : "Paid via M-Pesa"} - ${category} (KES)`,
+      date,
+      category,
+      status: "COMPLETED",
+      userId: user.userId,
+      accountId: user.accountId,
+      createdAt: date,
+      updatedAt: date,
     });
-
-    return {
-      success: true,
-      message: `Created ${transactions.length} transactions`,
-    };
-  } catch (error) {
-    console.error("Error seeding transactions:", error);
-    return { success: false, error: error.message };
   }
+
+  // Insert transactions into Prisma DB and update account balances
+  await db.$transaction(async (tx) => {
+    for (const user of USERS) {
+      const userTransactions = transactions.filter((t) => t.accountId === user.accountId);
+
+      await tx.transaction.createMany({
+        data: userTransactions,
+      });
+
+      const userBalance = userTransactions.reduce((acc, t) => acc + (t.type === "INCOME" ? t.amount : -t.amount), 0);
+
+      await tx.account.update({
+        where: { id: user.accountId },
+        data: { balance: userBalance },
+      });
+    }
+  });
+
+  console.log(`✅ Created ${transactions.length} M-Pesa transactions in Prisma DB`);
 }
+
+// Run seed directly if needed
+seedMpesaPrisma();

@@ -9,6 +9,10 @@
     "lint": "next lint",
     "email": "email dev",
     "postinstall": "prisma generate"
+    
+  
+
+
   },
   "dependencies": {
     "@arcjet/next": "^1.1.0",

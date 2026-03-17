@@ -4,13 +4,14 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+// Convert Prisma Decimal to number (KES)
 const serializeDecimal = (obj) => {
   const serialized = { ...obj };
   if (obj.balance) {
-    serialized.balance = obj.balance.toNumber();
+    serialized.balance = obj.balance.toNumber(); // balance in KES
   }
   if (obj.amount) {
-    serialized.amount = obj.amount.toNumber();
+    serialized.amount = obj.amount.toNumber(); // amount in KES
   }
   return serialized;
 };
@@ -95,7 +96,7 @@ export async function bulkDeleteTransactions(transactionIds) {
           where: { id: accountId },
           data: {
             balance: {
-              increment: balanceChange,
+              increment: balanceChange, // balance in KES
             },
           },
         });
@@ -143,7 +144,7 @@ export async function updateDefaultAccount(accountId) {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, data: serializeTransaction(account) };
+    return { success: true, data: serializeDecimal(account) }; // now KES
   } catch (error) {
     return { success: false, error: error.message };
   }

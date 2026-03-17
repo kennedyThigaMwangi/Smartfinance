@@ -30,7 +30,7 @@ export function AccountCard({ account }) {
     event.preventDefault(); // Prevent navigation
 
     if (isDefault) {
-      toast.warning("You need atleast 1 default account");
+      toast.warning("You need at least 1 default account");
       return; // Don't allow toggling off the default account
     }
 
@@ -64,7 +64,7 @@ export function AccountCard({ account }) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            ${parseFloat(balance).toFixed(2)}
+            KES {parseFloat(balance).toFixed(2)} {/* Changed from $ to KES */}
           </div>
           <p className="text-xs text-muted-foreground">
             {type.charAt(0) + type.slice(1).toLowerCase()} Account
