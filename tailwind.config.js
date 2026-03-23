@@ -59,3 +59,12 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 };
+// tailwind.config.js
+import scrollbarHide from "tailwind-scrollbar-hide";
+
+export default {
+  // ...your existing config
+  plugins: [
+    scrollbarHide,   // ← add this
+  ],
+};
