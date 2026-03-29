@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-/* ─── FOOTER STYLES ─────────────────────────────────────────────────────── */
 const footerStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -249,13 +249,23 @@ const footerStyles = `
 `;
 
 export default function SmartFinanceFooter() {
+  const pathname = usePathname();
+
+  // ── Hide footer on these pages ──────────────────────
+  const hideOn = [
+    "/transaction/create",
+    "/transaction/edit",
+    "/transaction/add",
+  ];
+  if (hideOn.some((p) => pathname.startsWith(p))) return null;
+  // ────────────────────────────────────────────────────
+
   const socialLinks = [
     { icon: "𝕏",  href: "https://twitter.com/kennietech",          label: "Twitter / X" },
     { icon: "in", href: "https://linkedin.com/company/kennietech", label: "LinkedIn" },
     { icon: "f",  href: "https://facebook.com/kennietech",         label: "Facebook" },
     { icon: "▶",  href: "https://youtube.com/@kennietech",         label: "YouTube" },
     { icon: "📸", href: "https://instagram.com/kennietech",        label: "Instagram" },
-    { icon: "gh", href: "https://github.com/kennietech",           label: "GitHub" },
     { icon: "📱", href: "https://tiktok.com/@kennietech",          label: "TikTok" },
   ];
 
@@ -274,7 +284,6 @@ export default function SmartFinanceFooter() {
     { href: "/team",     label: "Our Team" },
     { href: "/careers",  label: "Careers" },
     { href: "/blog",     label: "Blog & Updates" },
-    { href: "/press",    label: "Press Kit" },
     { href: "/partners", label: "Partners" },
   ];
 
@@ -299,13 +308,11 @@ export default function SmartFinanceFooter() {
   return (
     <footer className="sf-footer">
       <style dangerouslySetInnerHTML={{ __html: footerStyles }} />
-
       <div className="sf-orb-1" />
       <div className="sf-orb-2" />
-
       <div className="sf-footer-inner">
 
-        {/* ── TOP BANNER ── */}
+        {/* TOP BANNER */}
         <div className="sf-top-banner">
           <div className="sf-top-banner-grid">
             <div>
@@ -319,24 +326,18 @@ export default function SmartFinanceFooter() {
                 📬 Subscribe for monthly finance tips &amp; product updates
               </p>
               <div className="sf-subscribe-form">
-                <input
-                  className="sf-subscribe-input"
-                  type="email"
-                  placeholder="your@email.com"
-                />
+                <input className="sf-subscribe-input" type="email" placeholder="your@email.com" />
                 <button className="sf-subscribe-btn">Subscribe →</button>
               </div>
               <p style={{ color: "#334155", fontSize: 11, marginTop: 8 }}>
-                No spam. Unsubscribe anytime. 10,000+ subscribers.
+                No spam. Unsubscribe anytime. 5,000+ subscribers.
               </p>
             </div>
           </div>
         </div>
 
-        {/* ── MAIN 4-COLUMN GRID ── */}
+        {/* MAIN GRID */}
         <div className="sf-main-grid">
-
-          {/* Brand */}
           <div>
             <div className="sf-brand-logo">
               <div className="sf-logo-mark">💹</div>
@@ -349,16 +350,16 @@ export default function SmartFinanceFooter() {
             </p>
             <div className="sf-stats-row">
               <div className="sf-stat-pill">
-                <span className="sf-stat-val">50K+</span>
+                <span className="sf-stat-val">5K+</span>
                 <span className="sf-stat-lbl">Active Users</span>
               </div>
               <div className="sf-stat-pill">
-                <span className="sf-stat-val">KES 2B+</span>
+                <span className="sf-stat-val">KES 2M+</span>
                 <span className="sf-stat-lbl">Tracked</span>
               </div>
               <div className="sf-stat-pill">
                 <span className="sf-stat-val">4.9★</span>
-                <span className="sf-stat-lbl">App Store</span>
+          
               </div>
             </div>
             <p className="sf-col-title">Follow Us</p>
@@ -372,7 +373,6 @@ export default function SmartFinanceFooter() {
             </div>
           </div>
 
-          {/* Product */}
           <div>
             <p className="sf-col-title">Product</p>
             <ul className="sf-link-list">
@@ -382,7 +382,6 @@ export default function SmartFinanceFooter() {
             </ul>
           </div>
 
-          {/* Company + Support */}
           <div>
             <p className="sf-col-title">Company</p>
             <ul className="sf-link-list" style={{ marginBottom: 32 }}>
@@ -398,7 +397,6 @@ export default function SmartFinanceFooter() {
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
             <p className="sf-col-title">Get In Touch</p>
             <div className="sf-contact-item">
@@ -457,7 +455,7 @@ export default function SmartFinanceFooter() {
           </div>
         </div>
 
-        {/* ── TRUST BADGES ── */}
+        {/* TRUST BADGES */}
         <div className="sf-badges">
           {trustBadges.map((b, i) => (
             <div key={i} className="sf-badge">
@@ -467,7 +465,7 @@ export default function SmartFinanceFooter() {
           ))}
         </div>
 
-        {/* ── BOTTOM BAR ── */}
+        {/* BOTTOM BAR */}
         <div className="sf-bottom-bar">
           <div className="sf-bottom-inner">
             <div className="sf-copyright">
@@ -478,9 +476,7 @@ export default function SmartFinanceFooter() {
                 background: "rgba(16,185,129,0.15)", color: "#10b981",
                 fontSize: 11, padding: "2px 10px", borderRadius: 999,
                 fontWeight: 600, marginLeft: 6,
-              }}>
-                v2.5.0
-              </span>
+              }}>v2.5.0</span>
             </div>
             <ul className="sf-bottom-links">
               <li><Link href="/privacy">Privacy</Link></li>
@@ -489,7 +485,6 @@ export default function SmartFinanceFooter() {
               <li><Link href="/sitemap">Sitemap</Link></li>
               <li><Link href="/accessibility">Accessibility</Link></li>
             </ul>
-            {/* ✅ onClick is now safe — this whole file is a Client Component */}
             <button
               className="sf-back-top"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -500,7 +495,7 @@ export default function SmartFinanceFooter() {
           </div>
         </div>
 
-        {/* ── MADE BY ── */}
+        {/* MADE BY */}
         <div className="sf-made-with">
           MADE WITH <span className="sf-heart">💗</span> BY&nbsp;
           <strong>KENNIETECH</strong>

@@ -36,6 +36,7 @@ export function AddTransactionForm({
   categories,
   editMode = false,
   initialData = null,
+  hideTypeSelect = false,
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,7 +67,7 @@ export function AddTransactionForm({
             }),
           }
         : {
-            type: "EXPENSE",
+            type: initialData?.type ?? "EXPENSE",
             amount: "",
             description: "",
             accountId: accounts.find((ac) => ac.isDefault)?.id,
@@ -86,7 +87,6 @@ export function AddTransactionForm({
       ...data,
       amount: parseFloat(data.amount),
     };
-
     if (editMode) {
       transactionFn(editId, formData);
     } else {
@@ -98,12 +98,8 @@ export function AddTransactionForm({
     if (scannedData) {
       setValue("amount", scannedData.amount.toString());
       setValue("date", new Date(scannedData.date));
-      if (scannedData.description) {
-        setValue("description", scannedData.description);
-      }
-      if (scannedData.category) {
-        setValue("category", scannedData.category);
-      }
+      if (scannedData.description) setValue("description", scannedData.description);
+      if (scannedData.category) setValue("category", scannedData.category);
       toast.success("Receipt scanned successfully");
     }
   };
@@ -111,14 +107,19 @@ export function AddTransactionForm({
   useEffect(() => {
     if (transactionResult?.success && !transactionLoading) {
       toast.success(
-        editMode
-          ? "Transaction updated successfully"
-          : "Transaction created successfully"
+        editMode ? "Transaction updated successfully" : "Transaction created successfully"
       );
       reset();
       router.push(`/account/${transactionResult.data.accountId}`);
     }
   }, [transactionResult, transactionLoading, editMode]);
+
+  // Sync tab type into form when tab changes
+  useEffect(() => {
+    if (initialData?.type && !editMode) {
+      setValue("type", initialData.type);
+    }
+  }, [initialData?.type]);
 
   const type = watch("type");
   const isRecurring = watch("isRecurring");
@@ -133,36 +134,44 @@ export function AddTransactionForm({
       {/* Receipt Scanner - Only show in create mode */}
       {!editMode && <ReceiptScanner onScanComplete={handleScanComplete} />}
 
-      {/* Type */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Type</label>
-        <Select
-          onValueChange={(value) => setValue("type", value)}
-          defaultValue={type}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="EXPENSE">Expense</SelectItem>
-            <SelectItem value="INCOME">Income</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.type && (
-          <p className="text-sm text-red-500">{errors.type.message}</p>
-        )}
-      </div>
+      {/* Type — hidden when TransactionTabs controls it */}
+      {!hideTypeSelect && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Type</label>
+          <Select
+            onValueChange={(value) => setValue("type", value)}
+            defaultValue={type}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="EXPENSE">Expense</SelectItem>
+              <SelectItem value="INCOME">Income</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.type && (
+            <p className="text-sm text-red-500">{errors.type.message}</p>
+          )}
+        </div>
+      )}
 
       {/* Amount and Account */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Amount</label>
-          <Input
-            type="number"
-            step="0.01"
-            placeholder="0.00"
-            {...register("amount")}
-          />
+          <label className="text-sm font-medium">Amount (KES)</label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500">
+              KES
+            </span>
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              className="pl-12"
+              {...register("amount")}
+            />
+          </div>
           {errors.amount && (
             <p className="text-sm text-red-500">{errors.amount.message}</p>
           )}
@@ -180,7 +189,10 @@ export function AddTransactionForm({
             <SelectContent>
               {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.id}>
-                  {account.name} (${parseFloat(account.balance).toFixed(2)})
+                  {account.name} (KES {parseFloat(account.balance).toLocaleString("en-KE", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })})
                 </SelectItem>
               ))}
               <CreateAccountDrawer>

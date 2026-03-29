@@ -8,6 +8,7 @@ const navLinks = [
   { href: "/transactions", label: "Transactions", icon: "💳" },
   { href: "/accounts",     label: "Accounts",     icon: "🏦" },
   { href: "/reports",      label: "Reports",      icon: "📈" },
+  { href: "/settings",     label: "Settings",     icon: "⚙️" },
 ];
 
 const MainLayout = async ({ children }) => {

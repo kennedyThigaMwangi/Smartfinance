@@ -511,7 +511,6 @@ const Header = async () => {
 
             <SignedIn>
               <Link href="/dashboard"          className="sf-mob-link"><LayoutDashboard size={15} />Overview</Link>
-              <Link href="/budgets"            className="sf-mob-link">📊 Budgets</Link>
               <Link href="/reports"            className="sf-mob-link">📈 Reports</Link>
               <div className="sf-mob-divider" />
               <a href="/transaction/create" className="sf-mob-primary">

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-// §1 · ORIGINAL GENERATOR & DATASOURCE (untouched)
+// §1 · GENERATOR & DATASOURCE
 // ═══════════════════════════════════════════════════════════════════
 
 generator client {
@@ -13,59 +13,78 @@ datasource db {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// §2 · ORIGINAL MODELS (untouched)
+// §2 · CORE MODELS
 // ═══════════════════════════════════════════════════════════════════
 
 model User {
-  id            String    @id @default(uuid())
-  clerkUserId   String    @unique // clerk user id
-  email         String    @unique
-  name          String?
-  imageUrl      String?
-  transactions  Transaction[]
-  accounts      Account[]
-  budgets       Budget[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id          String  @id @default(uuid())
+  clerkUserId String  @unique
+  email       String  @unique
+  name        String?
+  imageUrl    String?
+
+  // original relations
+  transactions Transaction[]
+  accounts     Account[]
+  budgets      Budget[]
+
+  // new model back-relations
+  profile         UserProfile?
+  savingsGoals    SavingsGoal[]
+  categoryBudgets CategoryBudget[]
+  tags            Tag[]
+  notifications   Notification[]
+  aiInsights      AiInsight[]
+  auditLogs       AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
 
 model Account {
-  id           String        @id @default(uuid())
-  name         String
-  type         AccountType
-  balance      Decimal       @default(0) // will ask inital balance while creating an account
-  isDefault    Boolean       @default(false)
-  userId       String
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String      @id @default(uuid())
+  name      String
+  type      AccountType
+  balance   Decimal     @default(0)
+  isDefault Boolean     @default(false)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   transactions Transaction[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  savingsGoals SavingsGoal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@map("accounts")
 }
 
 model Transaction {
-  id                String            @id @default(uuid())
+  id                String             @id @default(uuid())
   type              TransactionType
   amount            Decimal
   description       String?
   date              DateTime
   category          String
   receiptUrl        String?
-  isRecurring       Boolean           @default(false)
-  recurringInterval RecurringInterval? // Only used if isRecurring is true
-  nextRecurringDate DateTime?         // Next date for recurring transaction
-  lastProcessed     DateTime?         // Last time this recurring transaction was processed
+  isRecurring       Boolean            @default(false)
+  recurringInterval RecurringInterval?
+  nextRecurringDate DateTime?
+  lastProcessed     DateTime?
   status            TransactionStatus  @default(COMPLETED)
   userId            String
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   accountId         String
-  account           Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  account           Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  tags        TransactionTag[]
+  attachments Attachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([accountId])
@@ -75,18 +94,19 @@ model Transaction {
 model Budget {
   id            String    @id @default(uuid())
   amount        Decimal
-  lastAlertSent DateTime? // Track when the last alert was sent
+  lastAlertSent DateTime?
   userId        String    @unique
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@map("budgets")
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// §3 · ORIGINAL ENUMS (untouched)
+// §3 · ORIGINAL ENUMS
 // ═══════════════════════════════════════════════════════════════════
 
 enum TransactionType {
@@ -116,22 +136,20 @@ enum RecurringInterval {
 // §4 · NEW ENUMS
 // ═══════════════════════════════════════════════════════════════════
 
-/// Currency codes — KES is the default for Kenyan users
 enum Currency {
   KES
   USD
   EUR
   GBP
-  UGX  // Uganda Shilling
-  TZS  // Tanzania Shilling
-  RWF  // Rwanda Franc
-  ETB  // Ethiopian Birr
-  ZAR  // South African Rand
-  NGN  // Nigerian Naira
-  GHS  // Ghanaian Cedi
+  UGX
+  TZS
+  RWF
+  ETB
+  ZAR
+  NGN
+  GHS
 }
 
-/// Priority level for savings goals and alerts
 enum Priority {
   LOW
   MEDIUM
@@ -139,7 +157,6 @@ enum Priority {
   CRITICAL
 }
 
-/// Status of a savings goal
 enum GoalStatus {
   ACTIVE
   PAUSED
@@ -147,13 +164,11 @@ enum GoalStatus {
   CANCELLED
 }
 
-/// Category of a budget — either a single spend category or a total monthly cap
 enum BudgetType {
-  CATEGORY   // budget scoped to one category
-  TOTAL      // overall monthly spend cap
+  CATEGORY
+  TOTAL
 }
 
-/// Notification channel preference
 enum NotificationChannel {
   EMAIL
   SMS
@@ -161,7 +176,6 @@ enum NotificationChannel {
   IN_APP
 }
 
-/// Supported payment methods (for tagging transactions)
 enum PaymentMethod {
   MPESA
   BANK_TRANSFER
@@ -176,122 +190,109 @@ enum PaymentMethod {
 // §5 · NEW MODELS
 // ═══════════════════════════════════════════════════════════════════
 
-// ── UserProfile ──────────────────────────────────────────────────
-/// Extended profile data for a user — keeps the original User model clean
 model UserProfile {
-  id                  String    @id @default(uuid())
-  userId              String    @unique
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  /// KES is the default; users can change to any supported currency
-  preferredCurrency   Currency  @default(KES)
-  phone               String?   // for SMS alerts
-  timezone            String    @default("Africa/Nairobi")
-  country             String    @default("KE")
-  mpesaNumber         String?   // linked M-Pesa number for auto-import
-  monthlyIncomeTarget Decimal?  // user-declared income target for health scoring
-  onboardingCompleted Boolean   @default(false)
+  preferredCurrency   Currency @default(KES)
+  phone               String?
+  timezone            String   @default("Africa/Nairobi")
+  country             String   @default("KE")
+  mpesaNumber         String?
+  webhookToken        String?  @unique
+  monthlyIncomeTarget Decimal?
+  onboardingCompleted Boolean  @default(false)
   lastActiveAt        DateTime?
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("user_profiles")
 }
 
-// ── SavingsGoal ──────────────────────────────────────────────────
-/// Tracks a user's savings target (e.g. Emergency Fund, School Fees)
 model SavingsGoal {
-  id              String     @id @default(uuid())
-  userId          String
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name            String               // e.g. "Emergency Fund"
-  description     String?
-  targetAmount    Decimal              // total amount to reach
-  savedAmount     Decimal    @default(0) // current saved amount
-  currency        Currency   @default(KES)
-  deadline        DateTime?            // optional target date
-  priority        Priority   @default(MEDIUM)
-  status          GoalStatus @default(ACTIVE)
-  icon            String?              // emoji or icon name
-  color           String?              // hex colour for UI
+  name         String
+  description  String?
+  targetAmount Decimal
+  savedAmount  Decimal    @default(0)
+  currency     Currency   @default(KES)
+  deadline     DateTime?
+  priority     Priority   @default(MEDIUM)
+  status       GoalStatus @default(ACTIVE)
+  icon         String?
+  color        String?
 
-  /// Linked account where savings are deposited
-  accountId       String?
-  account         Account?   @relation(fields: [accountId], references: [id])
+  accountId String?
+  account   Account? @relation(fields: [accountId], references: [id])
 
-  contributions   GoalContribution[]
+  contributions GoalContribution[]
 
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
   @@map("savings_goals")
 }
 
-// ── GoalContribution ─────────────────────────────────────────────
-/// Records each deposit/withdrawal against a SavingsGoal
 model GoalContribution {
-  id          String      @id @default(uuid())
-  goalId      String
-  goal        SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  id     String      @id @default(uuid())
+  goalId String
+  goal   SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
 
-  amount      Decimal
-  note        String?
-  date        DateTime    @default(now())
+  amount Decimal
+  note   String?
+  date   DateTime @default(now())
 
-  createdAt   DateTime    @default(now())
+  createdAt DateTime @default(now())
 
   @@index([goalId])
   @@map("goal_contributions")
 }
 
-// ── CategoryBudget ───────────────────────────────────────────────
-/// Per-category monthly budget cap — extends the original single Budget model
 model CategoryBudget {
-  id            String     @id @default(uuid())
-  userId        String
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  category      String               // matches Transaction.category
-  amount        Decimal              // monthly limit for this category
+  category      String
+  amount        Decimal
   type          BudgetType @default(CATEGORY)
-  alertAt       Int        @default(80) // send alert when % reached (e.g. 80)
+  alertAt       Int        @default(80)
   lastAlertSent DateTime?
 
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, category])
   @@index([userId])
   @@map("category_budgets")
 }
 
-// ── Tag ──────────────────────────────────────────────────────────
-/// User-defined tags for flexible transaction labelling
 model Tag {
-  id           String             @id @default(uuid())
-  userId       String
-  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name         String             // e.g. "Business Expense", "Tax Deductible"
-  color        String?            // hex colour
-  icon         String?
+  name  String
+  color String?
+  icon  String?
 
   transactions TransactionTag[]
 
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, name])
   @@index([userId])
   @@map("tags")
 }
 
-// ── TransactionTag ───────────────────────────────────────────────
-/// Join table: many-to-many between Transaction and Tag
 model TransactionTag {
   transactionId String
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
@@ -302,60 +303,52 @@ model TransactionTag {
   @@map("transaction_tags")
 }
 
-// ── Attachment ───────────────────────────────────────────────────
-/// File attachments linked to a transaction (receipts, invoices, etc.)
 model Attachment {
   id            String      @id @default(uuid())
   transactionId String
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
-  fileName      String
-  fileUrl       String      // storage URL (e.g. Supabase Storage / S3)
-  mimeType      String?     // e.g. "image/jpeg", "application/pdf"
-  sizeBytes     Int?
+  fileName  String
+  fileUrl   String
+  mimeType  String?
+  sizeBytes Int?
 
-  createdAt     DateTime    @default(now())
+  createdAt DateTime @default(now())
 
   @@index([transactionId])
   @@map("attachments")
 }
 
-// ── Notification ─────────────────────────────────────────────────
-/// Stores every notification sent/queued for a user
 model Notification {
-  id        String              @id @default(uuid())
-  userId    String
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  title     String
-  body      String
-  channel   NotificationChannel @default(IN_APP)
-  isRead    Boolean             @default(false)
-  sentAt    DateTime?
-  readAt    DateTime?
+  title    String
+  body     String
+  channel  NotificationChannel @default(IN_APP)
+  isRead   Boolean             @default(false)
+  sentAt   DateTime?
+  readAt   DateTime?
+  linkType String?
+  linkId   String?
 
-  /// Optional deep-link metadata (e.g. link to a transaction or goal)
-  linkType  String?  // "transaction" | "goal" | "budget"
-  linkId    String?
-
-  createdAt DateTime            @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, isRead])
   @@map("notifications")
 }
 
-// ── AiInsight ────────────────────────────────────────────────────
-/// Stores AI-generated financial insights per user per month
 model AiInsight {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  month     Int      // 1-12
-  year      Int
-  insights  String[] // array of insight strings
-  score     Int?     // financial health score 0-100
-  raw       Json?    // full AI response payload for debugging
+  month    Int
+  year     Int
+  insights String[]
+  score    Int?
+  raw      Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -365,13 +358,11 @@ model AiInsight {
   @@map("ai_insights")
 }
 
-// ── ExchangeRate ─────────────────────────────────────────────────
-/// Cached daily exchange rates relative to KES (base currency)
 model ExchangeRate {
-  id         String   @id @default(uuid())
+  id           String   @id @default(uuid())
   fromCurrency Currency
   toCurrency   Currency
-  rate         Decimal  // 1 fromCurrency = rate toCurrency
+  rate         Decimal
   fetchedAt    DateTime @default(now())
 
   @@unique([fromCurrency, toCurrency, fetchedAt])
@@ -379,22 +370,20 @@ model ExchangeRate {
   @@map("exchange_rates")
 }
 
-// ── AuditLog ─────────────────────────────────────────────────────
-/// Immutable audit trail for sensitive operations (account changes, deletes)
 model AuditLog {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  action     String   // e.g. "ACCOUNT_DELETED", "BUDGET_UPDATED"
-  entityType String   // e.g. "Account", "Transaction"
+  action     String
+  entityType String
   entityId   String
-  before     Json?    // snapshot before change
-  after      Json?    // snapshot after change
+  before     Json?
+  after      Json?
   ipAddress  String?
   userAgent  String?
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([entityType, entityId])

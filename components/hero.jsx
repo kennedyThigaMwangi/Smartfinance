@@ -145,8 +145,8 @@ const Carousel = ({ mouse, scrollY }) => {
       </div>
       {/* Floating cards */}
       <div className="fcard fc1"><span className="fcic">📈</span><div><div className="fcv">+24.8%</div><div className="fcl">Portfolio Growth</div></div><span className="fctag fcup">▲ MoM</span></div>
-      <div className="fcard fc2"><span className="fcic">🤖</span><div><div className="fcv">AI Insight</div><div className="fcl">Save $340/mo detected</div></div></div>
-      <div className="fcard fc3"><span className="fcic">🏦</span><div><div className="fcv">$12,430</div><div className="fcl">Total Savings Balance</div></div><span className="fctag fcup">▲ 8%</span></div>
+      <div className="fcard fc2"><span className="fcic">🤖</span><div><div className="fcv">AI Insight</div><div className="fcl">Save Kes2340/mo detected</div></div></div>
+      <div className="fcard fc3"><span className="fcic">🏦</span><div><div className="fcv">Kes12,430</div><div className="fcl">Total Savings Balance</div></div><span className="fctag fcup">▲ 8%</span></div>
     </div>
   );
 };
@@ -172,7 +172,6 @@ const HeroSection = () => {
     { icon: "🤖", title: "AI-Powered Forecasting", sub: "Our machine learning engine studies your habits and predicts spending patterns weeks in advance", color: "#a78bfa", glow: "#a78bfa44" },
     { icon: "📊", title: "Smart Dashboards",       sub: "Interactive, fully customisable financial views built to make complex data feel effortless",     color: "#38bdf8", glow: "#38bdf844" },
     { icon: "🔔", title: "Intelligent Alerts",     sub: "Context-aware notifications fire before you overspend — saving you money automatically",         color: "#fbbf24", glow: "#fbbf2444" },
-    { icon: "🌍", title: "Multi-Currency Support", sub: "Manage wallets and accounts across 180+ global currencies with live exchange rate conversion",    color: "#34d399", glow: "#34d39944" },
     { icon: "🔒", title: "Bank-Grade Security",    sub: "256-bit AES encryption, two-factor authentication, and SOC 2 compliance protect every byte",     color: "#f87171", glow: "#f8717144" },
   ];
 
@@ -565,7 +564,7 @@ const HeroSection = () => {
           <div className={`badge fu ${vis ? "in" : ""}`} style={{ transitionDelay: ".04s" }}>
             <span className="bdot" />
             <span className="bnew">NEW</span>
-            AI-Powered Financial Intelligence Platform
+            AI-POWERED FINANCE MANEGMENT SYSTEM
           </div>
 
           {/* ── Headline ── */}
@@ -574,7 +573,7 @@ const HeroSection = () => {
             <span className="hgrad">
               <Typewriter words={["Your Wealth", "Your Finances", "Your Budget", "Your Future"]} />
             </span>
-            <span className="h1sub">— Powered by Artificial Intelligence</span>
+            <span className="h1sub">— Manege your finances Efficiently</span>
           </h1>
 
           {/* ── Rule ── */}
@@ -602,10 +601,7 @@ const HeroSection = () => {
             {/* Mini stats inside card */}
             <div className="mini-stats">
               {[
-                { n: "14,000+", l: "Active Users" },
-                { n: "98%",     l: "AI Accuracy"  },
-                { n: "$5.8M+",  l: "Wealth Tracked"},
-                { n: "180+",    l: "Currencies"    },
+               
               ].map(s => (
                 <div className="mstat" key={s.l}>
                   <div className="mstat-num">{s.n}</div>
@@ -619,15 +615,15 @@ const HeroSection = () => {
           <div className={`mq-wrap fu ${vis ? "in" : ""}`} style={{ transitionDelay: ".32s" }}>
             <div className="mq-track">
               {[
-                { ic:"⚡", l:"Real-Time Analytics" }, { ic:"🤖", l:"AI Forecasting" },
-                { ic:"📊", l:"Smart Dashboards" },    { ic:"🔔", l:"Intelligent Alerts" },
-                { ic:"🌍", l:"Multi-Currency" },       { ic:"🔒", l:"Bank-Grade Security" },
+                { ic:"⚡", l:"Real-Time Analytics" },    { ic:"🤖", l:"AI Forecasting" },
+                { ic:"📊", l:"Smart Dashboards" },      { ic:"🔔", l:"Intelligent Alerts" },
+                { ic:"🔒", l:"Bank-Grade Security" },
                 { ic:"📱", l:"Mobile Ready" },          { ic:"🚀", l:"Zero Setup" },
                 { ic:"💡", l:"AI Insights" },           { ic:"📈", l:"Portfolio Growth" },
-                { ic:"⚡", l:"Real-Time Analytics" }, { ic:"🤖", l:"AI Forecasting" },
-                { ic:"📊", l:"Smart Dashboards" },    { ic:"🔔", l:"Intelligent Alerts" },
-                { ic:"🌍", l:"Multi-Currency" },       { ic:"🔒", l:"Bank-Grade Security" },
-                { ic:"📱", l:"Mobile Ready" },          { ic:"🚀", l:"Zero Setup" },
+                { ic:"⚡", l:"Real-Time Analytics" },    { ic:"🤖", l:"AI Forecasting" },
+                { ic:"📊", l:"Smart Dashboards" },      { ic:"🔔", l:"Intelligent Alerts" },
+                { ic:"🔒", l:"Bank-Grade Security" },
+                { ic:"🚀", l:"Zero Setup" },
                 { ic:"💡", l:"AI Insights" },           { ic:"📈", l:"Portfolio Growth" },
               ].map((m, i) => (
                 <React.Fragment key={i}>
@@ -650,7 +646,6 @@ const HeroSection = () => {
               { icon:"🤖", title:"AI-Powered Forecasting", sub:"Our ML engine studies your habits and predicts spending patterns weeks ahead",                  color:"#c084fc" },
               { icon:"📊", title:"Smart Dashboards",       sub:"Fully customisable interactive views that make complex financial data feel effortless",         color:"#38bdf8" },
               { icon:"🔔", title:"Intelligent Alerts",     sub:"Context-aware notifications fire before you overspend — protecting your budget automatically",  color:"#fbbf24" },
-              { icon:"🌍", title:"Multi-Currency Support", sub:"Manage wallets across 180+ global currencies with live real-time exchange conversion",          color:"#34d399" },
               { icon:"🔒", title:"Bank-Grade Security",    sub:"256-bit AES encryption, 2FA, and SOC 2 Type II compliance guard every byte of your data",      color:"#f87171" },
             ].map((f, i) => (
               <div
@@ -699,8 +694,7 @@ const HeroSection = () => {
             <span className="tsep"/>
             <div className="titem"><span className="tic">🔒</span>SOC 2 Type II</div>
             <span className="tsep"/>
-            <div className="titem"><span className="tic">🏦</span>256-bit Encrypted</div>
-            <span className="tsep"/>
+          
             <div className="titem"><span className="tic">⚡</span>No Credit Card</div>
           </div>
 
