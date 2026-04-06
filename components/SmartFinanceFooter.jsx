@@ -427,8 +427,8 @@ export default function SmartFinanceFooter() {
               <div>
                 <div className="sf-contact-label">Phone &amp; WhatsApp</div>
                 <div className="sf-contact-val">
-                  <a href="tel:+254700000000">+254 700 000 000</a><br />
-                  <a href="tel:+254200000000">+254 20 000 0000</a>
+                  <a href="tel:+254768338490">+254 768338490</a><br />
+                  <a href="tel:+25468338490">+254 768338490</a>
                 </div>
               </div>
             </div>

@@ -199,9 +199,8 @@ const marqueeItems = [
   { icon: "🤖", text: "AI Financial Insights" },
   { icon: "📈", text: "Financial Reports & Dashboards" },
   { icon: "📧", text: "Monthly Budget Notifications" },
-  { icon: "💳", text: "Debt Management" },
-  { icon: "🎯", text: "Goal Tracking" },
-  { icon: "🛡️", text: "Bank-Level Security" },
+  { icon: "💳", text: "Finances Management" },
+  { icon: "🎯", text: "Budget Tracking" },
   { icon: "📉", text: "Net Worth Monitoring" },
   { icon: "💡", text: "Smart Predictions" },
 ];
@@ -256,7 +255,7 @@ const objectives = [
       "Email & password authentication with hashing",
       "OAuth social login (Google, GitHub)",
       "Two-factor authentication (2FA)",
-      "Session management & JWT tokens",
+      "Session management",
     ],
     icon: "🔐",
   },
@@ -271,7 +270,7 @@ const objectives = [
       "Manual & bulk transaction import (CSV, PDF)",
       "Smart auto-categorisation engine",
       "Recurring transaction scheduler",
-      "Multi-currency & account support",
+      "Multi account support",
     ],
     icon: "📊",
   },
@@ -301,7 +300,7 @@ const objectives = [
       "Real-time net-worth dashboard",
       "Monthly / quarterly / annual P&L reports",
       "Category-level spending breakdowns",
-      "Export to PDF, Excel & CSV",
+      "Export to PDF",
     ],
     icon: "📈",
   },
@@ -826,8 +825,7 @@ function SecurityEnhanced() {
     { icon: "🛡️", title: "Two-Factor Authentication", desc: "Add a second layer of protection with TOTP authenticator apps or SMS verification." },
     { icon: "👁️", title: "Session Monitoring", desc: "Real-time detection of suspicious logins with automatic session revocation." },
     { icon: "🚫", title: "Zero Data Selling", desc: "Your financial data is yours. We never sell, share, or monetise your personal information." },
-    { icon: "✅", title: "GDPR & CCPA Compliant", desc: "Built to the highest global data-privacy standards with full audit trails." },
-    { icon: "☁️", title: "Secure Cloud Infrastructure", desc: "Hosted on ISO-27001-certified cloud infrastructure with 99.9% uptime SLA." },
+    
   ];
 
   return (
@@ -886,7 +884,7 @@ function SecurityEnhanced() {
 function ProcessTimeline() {
   const steps = [
     { num: 1, icon: "📝", title: "Create Your Account", desc: "Register securely in under 2 minutes. Your data is encrypted from the very first click.", color: "#3b82f6" },
-    { num: 2, icon: "🔗", title: "Connect Your Finances", desc: "Link bank accounts, import CSV statements, or add transactions manually.", color: "#10b981" },
+    { num: 2, icon: "🔗", title: "Connect Your Finances", desc: "add transactions manually.", color: "#10b981" },
     { num: 3, icon: "🤖", title: "AI Analyses Your Data", desc: "The system categorises transactions and builds your personal financial model.", color: "#8b5cf6" },
     { num: 4, icon: "📊", title: "Get Actionable Insights", desc: "View your dashboard, reports, and AI recommendations all in one place.", color: "#f59e0b" },
     { num: 5, icon: "📈", title: "Grow Your Wealth", desc: "Track goals, reduce debt, and increase savings month over month.", color: "#ef4444" },
@@ -1013,7 +1011,7 @@ const LandingPage = () => {
             </div>
             <div className="flex justify-center slide-right">
               <Image
-                src="/finance-dashboard.png"
+                src="/Dashbord.png"
                 alt="Finance Dashboard"
                 width={500}
                 height={400}
@@ -1126,7 +1124,6 @@ const LandingPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
                 { title: "Emergency Savings", desc: "Prepare for unexpected expenses by building a strong financial safety net." },
-                { title: "Debt Management", desc: "Track and reduce your debts with smart repayment strategies." },
                 { title: "Investment Tracking", desc: "Monitor your investments and watch your wealth grow over time." },
                 { title: "Financial Reports", desc: "Get insights and reports to make smarter financial decisions." },
               ].map((item, i) => (
@@ -1143,30 +1140,57 @@ const LandingPage = () => {
 
         {/* ══ NEW: Enhanced Security Section ══════════════════════════════ */}
         <SecurityEnhanced />
+{/* ══ ORIGINAL: Testimonials Section ══════════════════════════════ */}
+<section id="testimonials" className="py-20">
+  <div className="container mx-auto px-4">
+    <h2 className="text-3xl font-bold text-center mb-16 fade-up">
+      What Our Users Say
+    </h2>
 
-        {/* ══ ORIGINAL: Testimonials Section ══════════════════════════════ */}
-        <section id="testimonials" className="py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-16 fade-up">What Our Users Say</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {testimonialsData.map((testimonial, index) => (
-                <Card key={index} className={`p-6 adv-card ${index === 1 ? "fade-up" : index === 0 ? "slide-left" : "slide-right"}`}>
-                  <CardContent className="pt-4">
-                    <div className="flex items-center mb-4">
-                      <Image src={testimonial.image} alt={testimonial.name} width={40} height={40} className="rounded-full" />
-                      <div className="ml-4">
-                        <div className="font-semibold">{testimonial.name}</div>
-                        <div className="text-sm text-gray-600">{testimonial.role}</div>
-                      </div>
-                    </div>
-                    <p className="text-gray-600">{testimonial.quote}</p>
-                  </CardContent>
-                </Card>
-              ))}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {testimonialsData.map((testimonial, index) => (
+        <Card
+          key={index}
+          className={`p-6 adv-card ${
+            index === 1
+              ? "fade-up"
+              : index === 0
+              ? "slide-left"
+              : "slide-right"
+          }`}
+        >
+          <CardContent className="pt-4">
+            <div className="flex items-center mb-4">
+              <Image
+                src={testimonial.image}
+                alt={testimonial.name}
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+
+              <div className="ml-4">
+                <div className="font-semibold">{testimonial.name}</div>
+                <div className="text-sm text-gray-600">
+                  {testimonial.role}
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
 
+            {/* Star Rating */}
+            <div className="text-yellow-500 mb-2 text-sm">
+              ⭐⭐⭐⭐⭐
+            </div>
+
+            <p className="text-gray-600">
+              "{testimonial.quote}"
+            </p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+</section>
         {/* ══ ORIGINAL: Security Section ══════════════════════════════════ */}
         <section className="py-20 bg-gray-900 text-white">
           <div className="container mx-auto px-4 text-center">

@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// ═══════════════════════════════════════════════════════════════════
+//
 // §1 · STYLES
-// ═══════════════════════════════════════════════════════════════════
+//
 
 const pageStyles = `
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
@@ -247,7 +247,6 @@ body > footer { display: none !important; }
 // §2 · HELPERS
 // ═══════════════════════════════════════════════════════════════════
 
-/** Format number as KES with locale separators */
 function formatKes(n) {
   const v = parseFloat(n) || 0;
   if (v >= 1_000_000) return `KES ${(v / 1_000_000).toFixed(2)}M`;
@@ -255,7 +254,6 @@ function formatKes(n) {
   return `KES ${v.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-/** Raw number formatted with commas, no prefix */
 function formatNumber(n) {
   return (parseFloat(n) || 0).toLocaleString("en-KE", {
     minimumFractionDigits: 2,
@@ -263,7 +261,6 @@ function formatNumber(n) {
   });
 }
 
-/** Account type → icon + color */
 function getTypeConfig(type) {
   const t = type?.toUpperCase();
   const configs = {
@@ -309,8 +306,11 @@ function TableSkeleton() {
 
 export default async function AccountPage({ params }) {
 
+  // ✅ FIXED: params must be awaited in Next.js 15 before accessing properties
+  const { id } = await params;
+
   // ── ORIGINAL DATA FETCH (untouched) ───────────────────────────
-  const accountData = await getAccountWithTransactions(params.id);
+  const accountData = await getAccountWithTransactions(id);
   if (!accountData) { notFound(); }
   const { transactions, ...account } = accountData;
   // ── END ORIGINAL ──────────────────────────────────────────────
@@ -338,18 +338,17 @@ export default async function AccountPage({ params }) {
   const typeConfig = getTypeConfig(account.type);
 
   const statCards = [
-    { t:"ap-sc-teal",   icon:<ArrowUpRight size={15}/>,   lbl:"All-time Income",  val:formatKes(income),                sub:`${transactions.filter(t=>t.type==="INCOME").length} transactions`  },
-    { t:"ap-sc-rose",   icon:<ArrowDownRight size={15}/>, lbl:"All-time Expenses", val:formatKes(expense),              sub:`${transactions.filter(t=>t.type==="EXPENSE").length} transactions` },
-    { t:"ap-sc-amber",  icon:<TrendingUp size={15}/>,     lbl:"Net Position",     val:formatKes(Math.max(net,0)),       sub:`${savingsRate}% savings rate`                                      },
-    { t:"ap-sc-violet", icon:<Activity size={15}/>,       lbl:"This Month Spend", val:formatKes(monthlyExpense),        sub:`${monthlyTx.length} transactions`                                  },
-    { t:"ap-sc-blue",   icon:<BarChart2 size={15}/>,      lbl:"Total Transactions",val:`${txCount}`,                   sub:"All recorded entries"                                              },
+    { t:"ap-sc-teal",   icon:<ArrowUpRight size={15}/>,   lbl:"All-time Income",   val:formatKes(income),          sub:`${transactions.filter(t=>t.type==="INCOME").length} transactions`  },
+    { t:"ap-sc-rose",   icon:<ArrowDownRight size={15}/>, lbl:"All-time Expenses",  val:formatKes(expense),         sub:`${transactions.filter(t=>t.type==="EXPENSE").length} transactions` },
+    { t:"ap-sc-amber",  icon:<TrendingUp size={15}/>,     lbl:"Net Position",       val:formatKes(Math.max(net,0)), sub:`${savingsRate}% savings rate`                                      },
+    { t:"ap-sc-violet", icon:<Activity size={15}/>,       lbl:"This Month Spend",   val:formatKes(monthlyExpense),  sub:`${monthlyTx.length} transactions`                                  },
+    { t:"ap-sc-blue",   icon:<BarChart2 size={15}/>,      lbl:"Total Transactions", val:`${txCount}`,               sub:"All recorded entries"                                              },
   ];
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: pageStyles }}/>
 
-      {/* ── FOOTER SUPPRESSION when logged in ── */}
       {isLoggedIn && (
         <style>{`
           footer, [class*="footer"], [id*="footer"],
@@ -366,7 +365,6 @@ export default async function AccountPage({ params }) {
         <div className="ap-hero">
           <div className="ap-hero-inner">
 
-            {/* Left side */}
             <div className="ap-hero-left">
               <Link href="/dashboard" className="ap-breadcrumb">
                 <ChevronRight size={11} style={{ transform:"rotate(180deg)" }}/> Dashboard &nbsp;/&nbsp; <span>{account.name}</span>
@@ -379,7 +377,6 @@ export default async function AccountPage({ params }) {
                 {typeConfig.label} Account
               </div>
 
-              {/* ORIGINAL account name — capitalised gradient */}
               <h1 className="ap-account-name">
                 {account.name.split("").map((ch, i) =>
                   i < Math.ceil(account.name.length / 2)
@@ -394,7 +391,6 @@ export default async function AccountPage({ params }) {
                 &nbsp;·&nbsp; {txCount} Transactions
               </p>
 
-              {/* Quick actions */}
               <div className="ap-actions-row" style={{ marginTop:18 }}>
                 <Link href={`/transaction/create?accountId=${account.id}`} className="ap-action-btn primary">
                   <Sparkles size={13}/> Add Transaction
@@ -408,13 +404,11 @@ export default async function AccountPage({ params }) {
               </div>
             </div>
 
-            {/* Right side — balance */}
             <div className="ap-hero-right">
               <div className="ap-balance-block">
                 <div className="ap-balance-label">Current Balance</div>
                 <div className="ap-balance-row">
                   <span className="ap-kes-badge">KES</span>
-                  {/* ORIGINAL balance value — $ replaced with KES */}
                   <span className="ap-balance-amount">
                     {formatNumber(account.balance)}
                   </span>
@@ -499,7 +493,7 @@ export default async function AccountPage({ params }) {
         </div>
 
         {/* ═══════════════════════════════════════════════════════
-            §4.4 · CHART SECTION — ORIGINAL component, wrapped
+            §4.4 · CHART SECTION
             ═══════════════════════════════════════════════════════ */}
         <section id="chart-section">
           <div className="ap-section-head">
@@ -514,7 +508,6 @@ export default async function AccountPage({ params }) {
 
           <div className="ap-chart-card">
             <div className="ap-chart-header"/>
-            {/* ORIGINAL AccountChart — untouched */}
             <Suspense fallback={
               <div className="ap-loader">
                 <BarLoader className="mt-4" width={"100%"} color="#1e40af"/>
@@ -527,7 +520,7 @@ export default async function AccountPage({ params }) {
         </section>
 
         {/* ═══════════════════════════════════════════════════════
-            §4.5 · TRANSACTIONS TABLE — ORIGINAL component, wrapped
+            §4.5 · TRANSACTIONS TABLE
             ═══════════════════════════════════════════════════════ */}
         <section id="table-section">
           <div className="ap-section-head">
@@ -542,7 +535,6 @@ export default async function AccountPage({ params }) {
 
           <div className="ap-table-card">
             <div className="ap-table-header"/>
-            {/* ORIGINAL TransactionTable — untouched */}
             <Suspense fallback={
               <div className="ap-loader">
                 <BarLoader className="mt-4" width={"100%"} color="#0d9488"/>
@@ -554,7 +546,6 @@ export default async function AccountPage({ params }) {
           </div>
         </section>
 
-        {/* Empty state */}
         {txCount === 0 && (
           <div className="ap-notice">
             <div className="ap-notice-icon"><Wallet size={15} color="white"/></div>

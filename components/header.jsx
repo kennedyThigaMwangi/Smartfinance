@@ -398,7 +398,6 @@ const Header = async () => {
                   <div className="sf-dd-panel">
                     {[
                       { Icon: TrendingUp, label: "AI Analytics",  sub: "Real-time financial insights"  },
-                      { Icon: Shield,     label: "Security",       sub: "256-bit bank-grade protection" },
                       { Icon: Bell,       label: "Smart Alerts",   sub: "Budget notifications & nudges" },
                     ].map(({ Icon, label, sub }) => (
                       <a href="#features" className="sf-dd-item" key={label}>
@@ -414,22 +413,13 @@ const Header = async () => {
 
                 <a href="#testimonials" className="sf-link">Testimonials</a>
 
-                <Link href="/about" className="sf-link">
-                  <BookOpen size={13} />
-                  About
-                </Link>
-
-                <Link href="/contact" className="sf-link">
-                  <Mail size={13} />
-                  Contact
-                </Link>
+                
               </SignedOut>
 
               {/* Signed-in nav */}
               <SignedIn>
                 <Link href="/dashboard"          className="sf-link">Overview</Link>
-                <Link href="/transaction/create" className="sf-link">Transactions</Link>
-                <Link href="/budgets"            className="sf-link">Budgets</Link>
+                <Link href="/transaction/create" className="sf-link">Transactions</Link>`
                 <Link href="/reports"            className="sf-link">Reports</Link>
               </SignedIn>
 
@@ -497,8 +487,6 @@ const Header = async () => {
             <SignedOut>
               <a href="#features"     className="sf-mob-link"><TrendingUp size={15} />Features</a>
               <a href="#testimonials" className="sf-mob-link"><Bell size={15} />Testimonials</a>
-              <Link href="/about"     className="sf-mob-link"><BookOpen size={15} />About</Link>
-              <Link href="/contact"   className="sf-mob-link"><Mail size={15} />Contact</Link>
               <div className="sf-mob-divider" />
               <div className="sf-mob-actions">
                 <SignInButton forceRedirectUrl="/dashboard">

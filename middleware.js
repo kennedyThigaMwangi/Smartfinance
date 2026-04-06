@@ -1,4 +1,4 @@
-import arcjet, { createMiddleware, detectBot, shield, tokenBucket } from "@arcjet/next";
+import arcjet, { createMiddleware, detectBot, shield } from "@arcjet/next";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -8,48 +8,29 @@ const isProtectedRoute = createRouteMatcher([
   "/transaction(.*)",
 ]);
 
-// Create Arcjet middleware
 const aj = arcjet({
   key: process.env.ARCJET_KEY,
-  characteristics: ["userId"], // Track based on Clerk userId
+  characteristics: ["ip.src"],
   rules: [
-    // Shield protection
-    shield({
+    shield({ mode: "LIVE" }),           // ✅ keep — no "requested" needed
+    detectBot({                          // ✅ keep — no "requested" needed
       mode: "LIVE",
+      allow: ["CATEGORY:SEARCH_ENGINE", "GO_HTTP"],
     }),
-
-    // Bot protection
-    detectBot({
-      mode: "LIVE",
-      allow: [
-        "CATEGORY:SEARCH_ENGINE",
-        "GO_HTTP",
-      ],
-    }),
-
-    // Rate limiting
-    tokenBucket({
-      mode: "LIVE",
-      refillRate: 10,
-      interval: 3600,
-      capacity: 10,
-    }),
+    // ❌ tokenBucket REMOVED — crashes because createMiddleware
+    //    never passes `requested:` when calling protect()
   ],
 });
 
-// Clerk middleware
 const clerk = clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
-
   if (!userId && isProtectedRoute(req)) {
     const { redirectToSignIn } = await auth();
     return redirectToSignIn();
   }
-
   return NextResponse.next();
 });
 
-// Run Arcjet first, then Clerk
 export default createMiddleware(aj, clerk);
 
 export const config = {

@@ -4,9 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
+
 async function getDBUser() {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) throw new Error("Unauthorized");
@@ -137,10 +135,9 @@ export function parseMpesaSms(smsText) {
   return null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+//
 // ACTION: Import M-Pesa SMS messages
 // Accepts an array of SMS strings, parses each and bulk-inserts to DB
-// ─────────────────────────────────────────────────────────────────────────────
 export async function importMpesaSms(smsMessages) {
   try {
     const user    = await getDBUser();
