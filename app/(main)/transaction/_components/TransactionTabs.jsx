@@ -61,6 +61,7 @@ export function TransactionTabs({ accounts, categories }) {
             categories={categories}
             editMode={false}
             initialData={null}
+            hideTypeSelect={false}
           />
         )}
 

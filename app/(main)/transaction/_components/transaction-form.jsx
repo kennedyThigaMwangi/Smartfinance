@@ -135,26 +135,24 @@ export function AddTransactionForm({
       {!editMode && <ReceiptScanner onScanComplete={handleScanComplete} />}
 
       {/* Type — hidden when TransactionTabs controls it */}
-      {!hideTypeSelect && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Type</label>
-          <Select
-            onValueChange={(value) => setValue("type", value)}
-            defaultValue={type}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="EXPENSE">Expense</SelectItem>
-              <SelectItem value="INCOME">Income</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.type && (
-            <p className="text-sm text-red-500">{errors.type.message}</p>
-          )}
-        </div>
-      )}
+      <div className={!hideTypeSelect ? "space-y-2" : "hidden"}>
+        <label className="text-sm font-medium">Type</label>
+        <Select
+          onValueChange={(value) => setValue("type", value)}
+          defaultValue={type}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="EXPENSE">Expense</SelectItem>
+            <SelectItem value="INCOME">Income</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.type && (
+          <p className="text-sm text-red-500">{errors.type.message}</p>
+        )}
+      </div>
 
       {/* Amount and Account */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -291,30 +289,28 @@ export function AddTransactionForm({
       </div>
 
       {/* Recurring Interval */}
-      {isRecurring && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Recurring Interval</label>
-          <Select
-            onValueChange={(value) => setValue("recurringInterval", value)}
-            defaultValue={getValues("recurringInterval")}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select interval" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="DAILY">Daily</SelectItem>
-              <SelectItem value="WEEKLY">Weekly</SelectItem>
-              <SelectItem value="MONTHLY">Monthly</SelectItem>
-              <SelectItem value="YEARLY">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.recurringInterval && (
-            <p className="text-sm text-red-500">
-              {errors.recurringInterval.message}
-            </p>
-          )}
-        </div>
-      )}
+      <div className={isRecurring ? "space-y-2" : "hidden"}>
+        <label className="text-sm font-medium">Recurring Interval</label>
+        <Select
+          onValueChange={(value) => setValue("recurringInterval", value)}
+          defaultValue={getValues("recurringInterval")}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select interval" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="DAILY">Daily</SelectItem>
+            <SelectItem value="WEEKLY">Weekly</SelectItem>
+            <SelectItem value="MONTHLY">Monthly</SelectItem>
+            <SelectItem value="YEARLY">Yearly</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.recurringInterval && (
+          <p className="text-sm text-red-500">
+            {errors.recurringInterval.message}
+          </p>
+        )}
+      </div>
 
       {/* Actions */}
       <div className="flex gap-4">

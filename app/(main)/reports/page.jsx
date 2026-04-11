@@ -203,7 +203,11 @@ export default function ReportsPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{ paddingBottom: "2rem" }}>
+      <style>{`
+        footer { display: none !important; }
+      `}</style>
+      
       <div className="max-w-5xl mx-auto px-4 py-8">
 
         {/* ── Page header ── */}

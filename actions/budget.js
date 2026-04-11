@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+// Get user's budget limit and how much they've spent this month
 export async function getCurrentBudget(accountId) {
   try {
     const { userId } = await auth();
@@ -17,13 +18,14 @@ export async function getCurrentBudget(accountId) {
       throw new Error("User not found");
     }
 
+    // Get the budget they set
     const budget = await db.budget.findFirst({
       where: {
         userId: user.id,
       },
     });
 
-    // Get current month's expenses
+    // Calculate current month's dates
     const currentDate = new Date();
     const startOfMonth = new Date(
       currentDate.getFullYear(),
@@ -36,6 +38,7 @@ export async function getCurrentBudget(accountId) {
       0
     );
 
+    // Add up all expenses for this month
     const expenses = await db.transaction.aggregate({
       where: {
         userId: user.id,
@@ -63,6 +66,7 @@ export async function getCurrentBudget(accountId) {
   }
 }
 
+// User sets or updates their monthly budget limit
 export async function updateBudget(amount) {
   try {
     const { userId } = await auth();
@@ -74,7 +78,7 @@ export async function updateBudget(amount) {
 
     if (!user) throw new Error("User not found");
 
-    // Update or create budget
+    // Create new budget or update existing one
     const budget = await db.budget.upsert({
       where: {
         userId: user.id,

@@ -75,10 +75,16 @@ model Transaction {
   nextRecurringDate DateTime?
   lastProcessed     DateTime?
   status            TransactionStatus  @default(COMPLETED)
-  userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accountId         String
-  account           Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // ── M-Pesa bulk-import fields ──────────────────────────────────
+  receiptNo         String?            // e.g. "OKL1234567" — used for deduplication
+  source            String?            // e.g. "MPESA_IMPORT" | "MANUAL"
+  // ──────────────────────────────────────────────────────────────
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   tags        TransactionTag[]
   attachments Attachment[]
@@ -88,6 +94,7 @@ model Transaction {
 
   @@index([userId])
   @@index([accountId])
+  @@index([receiptNo])     // fast deduplication lookups
   @@map("transactions")
 }
 

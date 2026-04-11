@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { getUserAccounts } from "@/actions/dashboard";
-import { getDashboardData } from "@/actions/dashboard";
+import { getUserAccounts, getDashboardData } from "@/actions/dashboard";
 import { getCurrentBudget } from "@/actions/budget";
 import { AccountCard } from "./_components/account-card";
 import { CreateAccountDrawer } from "@/components/create-account-drawer";
@@ -10,17 +9,33 @@ import { Plus } from "lucide-react";
 import { DashboardOverview } from "./_components/transaction-overview";
 
 export default async function DashboardPage() {
-  const [accounts, transactions] = await Promise.all([
-    getUserAccounts(),
-    getDashboardData(),
-  ]);
+  // ── Safe fetch: Supabase free tier sleeps and can throw ──────────────────
+  let accounts = [];
+  let transactions = [];
 
-  const defaultAccount = accounts?.find((account) => account.isDefault);
+  try {
+    [accounts, transactions] = await Promise.all([
+      getUserAccounts(),
+      getDashboardData(),
+    ]);
 
-  // Get budget for default account
+    // Guarantee arrays even if actions return null/undefined
+    accounts     = accounts     ?? [];
+    transactions = transactions ?? [];
+  } catch (err) {
+    console.error("[DashboardPage] Failed to fetch data:", err?.message);
+    // Render empty state rather than crash — DB may still be waking up
+  }
+
+  const defaultAccount = accounts.find((account) => account.isDefault);
+
   let budgetData = null;
   if (defaultAccount) {
-    budgetData = await getCurrentBudget(defaultAccount.id);
+    try {
+      budgetData = await getCurrentBudget(defaultAccount.id);
+    } catch (err) {
+      console.error("[DashboardPage] Failed to fetch budget:", err?.message);
+    }
   }
 
   return (
@@ -28,13 +43,13 @@ export default async function DashboardPage() {
       {/* Budget Progress */}
       <BudgetProgress
         initialBudget={budgetData?.budget}
-        currentExpenses={budgetData?.currentExpenses || 0}
+        currentExpenses={budgetData?.currentExpenses ?? 0}
       />
 
       {/* Dashboard Overview */}
       <DashboardOverview
         accounts={accounts}
-        transactions={transactions || []}
+        transactions={transactions}
       />
 
       {/* Accounts Grid */}
@@ -47,11 +62,19 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </CreateAccountDrawer>
+
         {accounts.length > 0 &&
-          accounts?.map((account) => (
+          accounts.map((account) => (
             <AccountCard key={account.id} account={account} />
           ))}
       </div>
+
+      {/* DB wake-up notice — only shown when accounts failed to load */}
+      {accounts.length === 0 && (
+        <p className="text-center text-sm text-muted-foreground py-6">
+          Database is waking up — please refresh in a few seconds.
+        </p>
+      )}
     </div>
   );
 }

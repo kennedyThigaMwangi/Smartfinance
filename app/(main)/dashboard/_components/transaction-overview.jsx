@@ -2,7 +2,6 @@
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // §1 · IMPORTS
-//     Grouped: React → Recharts → date-fns → Lucide → shadcn → Auth
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -41,17 +40,14 @@ import { useRouter } from "next/navigation";
 // §2 · CONSTANTS & CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Chart colour palette — distinct enough to separate 12 categories */
 const PALETTE = [
   "#38bdf8","#4ECDC4","#96CEB4","#FFEEAD",
   "#FF6B6B","#D4A5A5","#9FA8DA","#F9844A",
   "#43AA8B","#F3722C","#90BE6D","#577590",
 ];
 
-/** Legacy alias kept for original Pie/Bar references */
 const COLORS = PALETTE;
 
-/** Period tab definitions */
 const PERIODS = [
   { key:"day",   label:"Day"   },
   { key:"week",  label:"Week"  },
@@ -59,14 +55,12 @@ const PERIODS = [
   { key:"year",  label:"Year"  },
 ];
 
-/** AI Intelligence panel tabs */
 const AI_TABS = [
   { key:"recommendations", label:"💡 Insights"     },
   { key:"predictions",     label:"🔮 Predictions"  },
   { key:"alerts",          label:"🔔 Alerts"       },
 ];
 
-/** Savings goal presets — scaled to monthly expense at runtime */
 const GOAL_PRESETS = [
   { icon:"🛡️", name:"Emergency Fund",  multiplier:3,   color:"#38bdf8" },
   { icon:"✈️", name:"Travel Reserve",  multiplier:0.5, color:"#4ECDC4" },
@@ -78,13 +72,10 @@ const GOAL_PRESETS = [
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // §3 · STYLES
-//     Organised by component area: base → auth → header → tabs → stat-cards
-//     → charts → transactions → categories → budget → goals → alerts
-//     → recurring → calendar → AI panel → modal → utilities
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const styles = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap)');
 
 /* ── BASE ── */
 .dov-root*{box-sizing:border-box;-webkit-font-smoothing:antialiased}
@@ -325,10 +316,9 @@ const styles = `
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// §4 · UTILITY FUNCTIONS  (pure — no side effects)
+// §4 · UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Format a number as KES currency — compact for large values */
 function fKes(n) {
   const v = Math.abs(parseFloat(n) || 0);
   if (v >= 1_000_000) return `KES ${(v / 1_000_000).toFixed(2)}M`;
@@ -336,7 +326,6 @@ function fKes(n) {
   return `KES ${v.toFixed(2)}`;
 }
 
-/** Return start/end Date objects for a given period key */
 function getPeriodRange(period) {
   const now = new Date();
   switch (period) {
@@ -347,12 +336,10 @@ function getPeriodRange(period) {
   }
 }
 
-/** Period-friendly label for header */
 function periodLabel(period) {
   return { day:"Today", week:"This Week", month:"This Month", year:"This Year" }[period] ?? "This Period";
 }
 
-/** Download an array of rows as CSV */
 function downloadCSV(rows, filename = "transactions.csv") {
   const header = ["Date","Description","Category","Type","Amount (KES)"];
   const lines  = [
@@ -372,10 +359,9 @@ function downloadCSV(rows, filename = "transactions.csv") {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// §5 · DATA ENGINES  (deterministic computation, ready for useMemo)
+// §5 · DATA ENGINES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Build 6-month income/expense/net trend */
 function buildTrendData(txs) {
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = subMonths(new Date(), 5 - i);
@@ -391,7 +377,6 @@ function buildTrendData(txs) {
   return months.map(({ label, income, expense }) => ({ label, income, expense, net: income - expense }));
 }
 
-/** Build daily spend totals by day-of-week for the weekly bar chart */
 function buildWeeklyData(txs) {
   const days   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const totals = Array(7).fill(0);
@@ -400,7 +385,6 @@ function buildWeeklyData(txs) {
   return days.map((d, i) => ({ day: d, amount: totals[i] }));
 }
 
-/** Build spending intensity per day for the last N days (heatmap) */
 function buildHeatmapData(txs, days = 28) {
   const today = new Date();
   const range = eachDayOfInterval({ start: subDays(today, days - 1), end: today });
@@ -412,7 +396,6 @@ function buildHeatmapData(txs, days = 28) {
   });
 }
 
-/** Auto-detect recurring transactions (same description appearing ≥2 months) */
 function detectRecurring(txs) {
   const map = {};
   txs.forEach(t => {
@@ -434,21 +417,19 @@ function detectRecurring(txs) {
   return result.sort((a, b) => b.avgAmount - a.avgAmount).slice(0, 6);
 }
 
-/** Compute auto-budgets from 3-month category averages, compare to current month */
 function buildBudgets(txs, currentMonthExpenses) {
   const cutoff = subMonths(startOfMonth(new Date()), 3);
   const historical = txs.filter(t => t.type === "EXPENSE" && new Date(t.date) >= cutoff);
   const catAvg = {};
   historical.forEach(t => { if (!catAvg[t.category]) catAvg[t.category] = []; catAvg[t.category].push(t.amount); });
   return Object.entries(catAvg).map(([cat, amounts]) => {
-    const avg     = amounts.reduce((s, v) => s + v, 0) / 3; // divided by 3 months
+    const avg     = amounts.reduce((s, v) => s + v, 0) / 3;
     const current = currentMonthExpenses.filter(t => t.category === cat).reduce((s, t) => s + t.amount, 0);
     const pct     = avg > 0 ? Math.round((current / avg) * 100) : 0;
     return { cat, budget: Math.round(avg * 1.1), current, pct: Math.min(pct, 150) };
   }).sort((a, b) => b.pct - a.pct).slice(0, 6);
 }
 
-/** Generate financial alerts from current data */
 function buildAlerts(savingsRate, budgets, expTrend, topCat, income, expense) {
   const alerts = [];
   if (savingsRate < 10)
@@ -467,7 +448,6 @@ function buildAlerts(savingsRate, budgets, expTrend, topCat, income, expense) {
   return alerts.slice(0, 5);
 }
 
-/** Financial health score 0–100 */
 function computeHealthScore(income, expense, savingsRate, txCount) {
   let s = 100;
   if (savingsRate < 10) s -= 30; else if (savingsRate < 20) s -= 15;
@@ -477,7 +457,6 @@ function computeHealthScore(income, expense, savingsRate, txCount) {
   return Math.max(10, Math.min(100, Math.round(s)));
 }
 
-/** Generate AI recommendations */
 function genRecs(income, expense, savingsRate, cats, trend, daysLeft) {
   const net      = income - expense;
   const burn     = expense / Math.max(new Date().getDate(), 1);
@@ -502,7 +481,6 @@ function genRecs(income, expense, savingsRate, cats, trend, daysLeft) {
   return recs.slice(0, 6);
 }
 
-/** Generate AI predictions */
 function genPredictions(income, expense, trend, savingsRate, topCat) {
   const avgI   = trend.reduce((s, m) => s + m.income, 0) / Math.max(trend.filter(m => m.income > 0).length, 1);
   const avgE   = trend.reduce((s, m) => s + m.expense, 0) / Math.max(trend.filter(m => m.expense > 0).length, 1);
@@ -520,7 +498,6 @@ function genPredictions(income, expense, trend, savingsRate, topCat) {
 // §6 · ATOMIC UI COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** SVG progress ring with centred percentage label */
 function ProgressRing({ pct, color, size = 52 }) {
   const r = (size - 6) / 2, circ = 2 * Math.PI * r, dash = (Math.min(pct, 100) / 100) * circ;
   return (
@@ -537,7 +514,6 @@ function ProgressRing({ pct, color, size = 52 }) {
   );
 }
 
-/** Generic empty state placeholder */
 function EmptyState({ icon = "📭", message = "No data available" }) {
   return (
     <div className="dov-empty">
@@ -549,8 +525,6 @@ function EmptyState({ icon = "📭", message = "No data available" }) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // §7 · VIEW-ALL TRANSACTIONS MODAL
-//     Features: search, type filter, category filter, period filter,
-//               sort by date/amount, pagination (25/page), CSV export
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const PAGE_SIZE = 25;
@@ -569,7 +543,7 @@ function ViewAllModal({ transactions, onClose, hideBalance }) {
 
   const filtered = useMemo(() => {
     let list = [...transactions];
-    if (search.trim())  list = list.filter(t => (t.description||"").toLowerCase().includes(search.toLowerCase()) || (t.category||"").toLowerCase().includes(search.toLowerCase()));
+    if (search.trim())   list = list.filter(t => (t.description||"").toLowerCase().includes(search.toLowerCase()) || (t.category||"").toLowerCase().includes(search.toLowerCase()));
     if (typeF !== "ALL") list = list.filter(t => t.type === typeF);
     if (catF  !== "ALL") list = list.filter(t => t.category === catF);
     list.sort((a, b) => {
@@ -581,36 +555,43 @@ function ViewAllModal({ transactions, onClose, hideBalance }) {
     return list;
   }, [transactions, search, typeF, catF, sortF]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
-  const pageRows   = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageRows    = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const totalIncome  = filtered.filter(t => t.type === "INCOME" ).reduce((s, t) => s + t.amount, 0);
   const totalExpense = filtered.filter(t => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
 
-  // Prevent body scroll
-  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   return (
     <div className="dov-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="dov-modal">
 
-        {/* Header */}
         <div className="dov-modal-head">
           <div>
             <div className="dov-modal-title">All Transactions</div>
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>
-              {filtered.length} records · <span style={{ color:"#16a34a", fontWeight:700 }}>{fKes(totalIncome)}</span> in · <span style={{ color:"#dc2626", fontWeight:700 }}>{fKes(totalExpense)}</span> out
+              {filtered.length} records ·{" "}
+              <span style={{ color:"#16a34a", fontWeight:700 }}>{fKes(totalIncome)}</span> in ·{" "}
+              <span style={{ color:"#dc2626", fontWeight:700 }}>{fKes(totalExpense)}</span> out
             </div>
           </div>
           <button className="dov-modal-close" onClick={onClose}><X size={16}/></button>
         </div>
 
-        {/* Filters */}
         <div className="dov-modal-filters">
           <div className="dov-modal-search-wrap">
             <Search size={13} className="dov-modal-search-icon"/>
-            <input className="dov-modal-search" placeholder="Search by description or category…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}/>
+            <input
+              className="dov-modal-search"
+              placeholder="Search by description or category…"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+            />
           </div>
           <select className="dov-modal-select" value={typeF} onChange={e => { setTypeF(e.target.value); setPage(1); }}>
             <option value="ALL">All Types</option>
@@ -628,7 +609,6 @@ function ViewAllModal({ transactions, onClose, hideBalance }) {
           </select>
         </div>
 
-        {/* Table */}
         <div className="dov-modal-body">
           {pageRows.length === 0 ? (
             <EmptyState icon="🔍" message="No transactions match your filters"/>
@@ -646,13 +626,19 @@ function ViewAllModal({ transactions, onClose, hideBalance }) {
               <tbody>
                 {pageRows.map((t, i) => (
                   <tr key={t.id || i}>
-                    <td style={{ color:"#64748b", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>{format(new Date(t.date), "dd MMM yyyy")}</td>
+                    <td style={{ color:"#64748b", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>
+                      {format(new Date(t.date), "dd MMM yyyy")}
+                    </td>
                     <td style={{ fontWeight:500 }}>{t.description || "Untitled"}</td>
                     <td>
-                      <span style={{ fontSize:10.5, padding:"2px 8px", borderRadius:999, background:"#f1f5f9", color:"#475569", fontWeight:600 }}>{t.category || "—"}</span>
+                      <span style={{ fontSize:10.5, padding:"2px 8px", borderRadius:999, background:"#f1f5f9", color:"#475569", fontWeight:600 }}>
+                        {t.category || "—"}
+                      </span>
                     </td>
                     <td>
-                      <span style={{ fontSize:10.5, padding:"2px 8px", borderRadius:999, fontWeight:700, background: t.type==="INCOME"?"#dcfce7":"#fee2e2", color: t.type==="INCOME"?"#16a34a":"#dc2626" }}>{t.type}</span>
+                      <span style={{ fontSize:10.5, padding:"2px 8px", borderRadius:999, fontWeight:700, background: t.type==="INCOME"?"#dcfce7":"#fee2e2", color: t.type==="INCOME"?"#16a34a":"#dc2626" }}>
+                        {t.type}
+                      </span>
                     </td>
                     <td style={{ textAlign:"right", fontFamily:"'DM Sans',sans-serif", fontWeight:700, color: t.type==="INCOME"?"#16a34a":"#dc2626" }}>
                       {t.type==="INCOME"?"+":"−"}{hideBalance ? "••••" : fKes(t.amount)}
@@ -664,7 +650,6 @@ function ViewAllModal({ transactions, onClose, hideBalance }) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="dov-modal-footer">
           <button className="dov-modal-export" onClick={() => downloadCSV(filtered)}>
             <Download size={13}/> Export CSV
@@ -687,7 +672,6 @@ function ViewAllModal({ transactions, onClose, hideBalance }) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // §8 · BUDGET INTELLIGENCE PANEL
-//     Auto-computed budgets from 3-month category averages vs. current month
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function BudgetPanel({ budgets, hideBalance }) {
@@ -695,16 +679,18 @@ function BudgetPanel({ budgets, hideBalance }) {
   return (
     <div style={{ padding: "12px 0 8px" }}>
       {budgets.map((b, i) => {
-        const over   = b.pct > 100;
-        const warn   = b.pct > 80;
-        const color  = over ? "#ef4444" : warn ? "#f59e0b" : "#4ECDC4";
+        const over  = b.pct > 100;
+        const warn  = b.pct > 80;
+        const color = over ? "#ef4444" : warn ? "#f59e0b" : "#4ECDC4";
         return (
           <div key={b.cat} className="dov-budget-row" style={{ animationDelay: `${i*.07}s` }}>
             <div className="dov-budget-meta">
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <div style={{ width:7,height:7,borderRadius:"50%",background:color,flexShrink:0 }}/>
+                <div style={{ width:7, height:7, borderRadius:"50%", background:color, flexShrink:0 }}/>
                 <span className="dov-budget-name">{b.cat}</span>
-                {over && <span style={{ fontSize:9,padding:"1px 6px",borderRadius:999,background:"#fef2f2",color:"#ef4444",fontWeight:700 }}>OVER</span>}
+                {over && (
+                  <span style={{ fontSize:9, padding:"1px 6px", borderRadius:999, background:"#fef2f2", color:"#ef4444", fontWeight:700 }}>OVER</span>
+                )}
               </div>
               <span className="dov-budget-vals">
                 {hideBalance ? "••••" : fKes(b.current)} / {hideBalance ? "••••" : fKes(b.budget)}
@@ -725,7 +711,6 @@ function BudgetPanel({ budgets, hideBalance }) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // §9 · RECURRING TRANSACTIONS PANEL
-//     Detects bills and subscriptions appearing across ≥2 months
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function RecurringPanel({ recurring, hideBalance }) {
@@ -742,8 +727,13 @@ function RecurringPanel({ recurring, hideBalance }) {
             </div>
           </div>
           <div style={{ textAlign:"right" }}>
-            <div className="dov-rec-tx-amt">{hideBalance ? "••••" : fKes(r.avgAmount)}<span style={{ fontSize:9, color:"#94a3b8", fontWeight:500 }}>/mo</span></div>
-            <span style={{ fontSize:10, padding:"2px 6px", borderRadius:999, background: r.type==="INCOME"?"#dcfce7":"#fee2e2", color: r.type==="INCOME"?"#16a34a":"#dc2626", fontWeight:700 }}>{r.type}</span>
+            <div className="dov-rec-tx-amt">
+              {hideBalance ? "••••" : fKes(r.avgAmount)}
+              <span style={{ fontSize:9, color:"#94a3b8", fontWeight:500 }}>/mo</span>
+            </div>
+            <span style={{ fontSize:10, padding:"2px 6px", borderRadius:999, background: r.type==="INCOME"?"#dcfce7":"#fee2e2", color: r.type==="INCOME"?"#16a34a":"#dc2626", fontWeight:700 }}>
+              {r.type}
+            </span>
           </div>
         </div>
       ))}
@@ -757,7 +747,7 @@ function RecurringPanel({ recurring, hideBalance }) {
 
 function ComparisonPanel({ txs, hideBalance }) {
   const now    = new Date();
-  const cmStart = startOfMonth(now), cmEnd = endOfMonth(now);
+  const cmStart = startOfMonth(now),           cmEnd = endOfMonth(now);
   const pmStart = startOfMonth(subMonths(now, 1)), pmEnd = endOfMonth(subMonths(now, 1));
 
   const cm = txs.filter(t => { const d = new Date(t.date); return d >= cmStart && d <= cmEnd; });
@@ -767,12 +757,13 @@ function ComparisonPanel({ txs, hideBalance }) {
     current: cm.filter(t => t.type === type).reduce((s, t) => s + t.amount, 0),
     prev:    pm.filter(t => t.type === type).reduce((s, t) => s + t.amount, 0),
   });
+
   const inc = stats("INCOME"), exp = stats("EXPENSE");
-  const incDelta = inc.prev > 0 ? ((inc.current - inc.prev)/inc.prev*100) : 0;
-  const expDelta = exp.prev > 0 ? ((exp.current - exp.prev)/exp.prev*100) : 0;
+  const incDelta  = inc.prev > 0 ? ((inc.current - inc.prev) / inc.prev * 100) : 0;
+  const expDelta  = exp.prev > 0 ? ((exp.current - exp.prev) / exp.prev * 100) : 0;
   const netCurrent = inc.current - exp.current;
   const netPrev    = inc.prev    - exp.prev;
-  const netDelta   = netPrev > 0 ? ((netCurrent - netPrev)/netPrev*100) : 0;
+  const netDelta   = netPrev > 0 ? ((netCurrent - netPrev) / netPrev * 100) : 0;
 
   const Row = ({ label, current, prev, delta, positive }) => (
     <div className="dov-compare-row">
@@ -810,7 +801,7 @@ function ComparisonPanel({ txs, hideBalance }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// §11 · SPENDING CALENDAR HEATMAP  (last 28 days)
+// §11 · SPENDING CALENDAR HEATMAP
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function CalendarHeatmap({ heatmapData }) {
@@ -826,7 +817,6 @@ function CalendarHeatmap({ heatmapData }) {
     return "#1e3a8a";
   }
 
-  // Pad to full week grid
   const firstDay = heatmapData[0]?.date?.getDay() ?? 0;
   const padded   = [...Array(firstDay).fill(null), ...heatmapData];
 
@@ -862,8 +852,8 @@ function SavingsGoalsPanel({ netSavings, expense, hideBalance }) {
   return (
     <div className="dov-goals-grid">
       {GOAL_PRESETS.map((g, i) => {
-        const target  = Math.round(expense * g.multiplier);
-        const pct     = target > 0 ? Math.min(Math.round((accumulated / target) * 100), 100) : 0;
+        const target = Math.round(expense * g.multiplier);
+        const pct    = target > 0 ? Math.min(Math.round((accumulated / target) * 100), 100) : 0;
         return (
           <div key={i} className="dov-goal-card" style={{ animationDelay:`${i*.08}s` }}>
             <div className="dov-goal-icon">{g.icon}</div>
@@ -882,16 +872,31 @@ function SavingsGoalsPanel({ netSavings, expense, hideBalance }) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // §13 · MAIN COMPONENT — DashboardOverview
-//      Original props interface unchanged: { accounts, transactions }
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function DashboardOverview({ accounts, transactions }) {
 
-  // ── AUTH GUARD (original) ────────────────────────────────────────────────
+  // ── AUTH HOOKS — must come first, always ────────────────────────────────
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
-  useEffect(() => { if (isLoaded && !isSignedIn) router.push("/sign-in"); }, [isLoaded, isSignedIn, router]);
 
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.push("/sign-in");
+  }, [isLoaded, isSignedIn, router]);
+
+  // ── ALL useState HOOKS — declared before any early return ───────────────
+  const [selectedAccountId, setSelectedAccountId] = useState(
+    () => accounts?.find(a => a.isDefault)?.id || accounts?.[0]?.id
+  );
+  const [period,       setPeriod]       = useState("month");
+  const [chartType,    setChartType]    = useState("area");
+  const [hideBalance,  setHideBalance]  = useState(false);
+  const [aiTab,        setAiTab]        = useState("recommendations");
+  const [showModal,    setShowModal]    = useState(false);
+  const [rightCardTab, setRightCardTab] = useState("breakdown");
+  const [leftCardTab,  setLeftCardTab]  = useState("recent");
+
+  // ── EARLY RETURN — safe now, all hooks already called above ─────────────
   if (!isLoaded || !isSignedIn) {
     return (
       <div className="dov-root">
@@ -899,7 +904,9 @@ export function DashboardOverview({ accounts, transactions }) {
         <div className="dov-auth-gate">
           <div className="dov-auth-icon">🔐</div>
           <div className="dov-auth-title">Sign in to view your Dashboard</div>
-          <div className="dov-auth-sub">Your financial overview is private. Please log in to access your accounts, analytics, and AI insights.</div>
+          <div className="dov-auth-sub">
+            Your financial overview is private. Please log in to access your accounts, analytics, and AI insights.
+          </div>
           <button className="dov-auth-btn" onClick={() => router.push("/sign-in")}>
             <Shield size={15}/> Sign In to Continue <ArrowRight size={14}/>
           </button>
@@ -908,34 +915,18 @@ export function DashboardOverview({ accounts, transactions }) {
     );
   }
 
-  // ── UI STATE ─────────────────────────────────────────────────────────────
-  const [selectedAccountId, setSelectedAccountId] = useState(
-    accounts.find(a => a.isDefault)?.id || accounts[0]?.id
-  );
-  const [period,       setPeriod]       = useState("month");
-  const [chartType,    setChartType]    = useState("area");
-  const [hideBalance,  setHideBalance]  = useState(false);
-  const [aiTab,        setAiTab]        = useState("recommendations");
-  const [showModal,    setShowModal]    = useState(false);
-  // Secondary card tabs
-  const [rightCardTab, setRightCardTab] = useState("breakdown");  // breakdown | comparison | goals
-  const [leftCardTab,  setLeftCardTab]  = useState("recent");     // recent | recurring | budget
+  // ── MEMOISED DATA ────────────────────────────────────────────────────────
 
-  // ── MEMOISED DATA ─────────────────────────────────────────────────────────
-
-  /** All transactions for the selected account */
   const accountTransactions = useMemo(
-    () => transactions.filter(t => t.accountId === selectedAccountId),
+    () => (transactions || []).filter(t => t.accountId === selectedAccountId),
     [transactions, selectedAccountId]
   );
 
-  /** Transactions filtered to selected period (affects stats + recent list) */
   const periodTransactions = useMemo(() => {
     const { start, end } = getPeriodRange(period);
     return accountTransactions.filter(t => isWithinInterval(new Date(t.date), { start, end }));
   }, [accountTransactions, period]);
 
-  /** Aggregated period stats */
   const stats = useMemo(() => {
     const income  = periodTransactions.filter(t => t.type === "INCOME" ).reduce((s, t) => s + t.amount, 0);
     const expense = periodTransactions.filter(t => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
@@ -944,7 +935,6 @@ export function DashboardOverview({ accounts, transactions }) {
     return { income, expense, net, rate };
   }, [periodTransactions]);
 
-  /** Current-month expenses (always month-scoped for category breakdown) */
   const currentMonthExpenses = useMemo(() => {
     const now = new Date();
     return accountTransactions.filter(t => {
@@ -953,69 +943,72 @@ export function DashboardOverview({ accounts, transactions }) {
     });
   }, [accountTransactions]);
 
-  /** Pie chart data — original structure */
   const pieChartData = useMemo(() => {
-    const map = currentMonthExpenses.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
+    const map = currentMonthExpenses.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
+      return acc;
+    }, {});
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [currentMonthExpenses]);
 
-  /** Category bars — current month */
   const categoryBars = useMemo(() => {
     const total = currentMonthExpenses.reduce((s, t) => s + t.amount, 0) || 1;
-    const map   = currentMonthExpenses.reduce((acc, t) => { acc[t.category] = (acc[t.category] || 0) + t.amount; return acc; }, {});
+    const map   = currentMonthExpenses.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
+      return acc;
+    }, {});
     return Object.entries(map)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, val], i) => ({ name, val, pct: Math.round((val / total) * 100), color: PALETTE[i % PALETTE.length] }));
   }, [currentMonthExpenses]);
 
-  /** Recent transactions — period-aware, latest 8 */
   const recentTransactions = useMemo(
     () => [...periodTransactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8),
     [periodTransactions]
   );
 
-  /** 6-month trend data */
-  const trendData   = useMemo(() => buildTrendData(accountTransactions),    [accountTransactions]);
-  const weeklyData  = useMemo(() => buildWeeklyData(accountTransactions),   [accountTransactions]);
-  const heatmapData = useMemo(() => buildHeatmapData(accountTransactions),  [accountTransactions]);
-  const recurring   = useMemo(() => detectRecurring(accountTransactions),   [accountTransactions]);
+  const trendData   = useMemo(() => buildTrendData(accountTransactions),   [accountTransactions]);
+  const weeklyData  = useMemo(() => buildWeeklyData(accountTransactions),  [accountTransactions]);
+  const heatmapData = useMemo(() => buildHeatmapData(accountTransactions), [accountTransactions]);
+  const recurring   = useMemo(() => detectRecurring(accountTransactions),  [accountTransactions]);
   const budgets     = useMemo(() => buildBudgets(accountTransactions, currentMonthExpenses), [accountTransactions, currentMonthExpenses]);
 
-  /** Health score */
-  const hScore  = useMemo(() => computeHealthScore(stats.income, stats.expense, stats.rate, periodTransactions.length), [stats, periodTransactions]);
-  const hColor  = hScore >= 75 ? "#10b981" : hScore >= 50 ? "#f59e0b" : "#ef4444";
-  const hLabel  = hScore >= 75 ? "Excellent" : hScore >= 50 ? "Fair" : "Needs Work";
+  const hScore = useMemo(
+    () => computeHealthScore(stats.income, stats.expense, stats.rate, periodTransactions.length),
+    [stats, periodTransactions]
+  );
+  const hColor = hScore >= 75 ? "#10b981" : hScore >= 50 ? "#f59e0b" : "#ef4444";
+  const hLabel = hScore >= 75 ? "Excellent" : hScore >= 50 ? "Fair" : "Needs Work";
 
-  /** AI-generated content */
   const last2    = trendData.slice(-2);
   const expTrend = last2.length === 2 ? last2[1].expense - last2[0].expense : 0;
-  const aiRecs   = useMemo(() => genRecs(stats.income, stats.expense, stats.rate, categoryBars, trendData, new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()), [stats, categoryBars, trendData]);
-  const aiPreds  = useMemo(() => genPredictions(stats.income, stats.expense, trendData, stats.rate, categoryBars[0]), [stats, trendData, categoryBars]);
-  const alerts   = useMemo(() => buildAlerts(stats.rate, budgets, expTrend, categoryBars[0], stats.income, stats.expense), [stats, budgets, expTrend, categoryBars]);
 
-  /** Selected account */
-  const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+  const daysLeft = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate();
 
-  /** Stat cards definition */
+  const aiRecs  = useMemo(() => genRecs(stats.income, stats.expense, stats.rate, categoryBars, trendData, daysLeft),         [stats, categoryBars, trendData, daysLeft]);
+  const aiPreds = useMemo(() => genPredictions(stats.income, stats.expense, trendData, stats.rate, categoryBars[0]),          [stats, trendData, categoryBars]);
+  const alerts  = useMemo(() => buildAlerts(stats.rate, budgets, expTrend, categoryBars[0], stats.income, stats.expense),     [stats, budgets, expTrend, categoryBars]);
+
+  const selectedAccount = (accounts || []).find(a => a.id === selectedAccountId);
+
   const statCards = [
-    { t:"dov-sc-blue",   icon:<Wallet size={16}/>,         label:"Balance",       val: selectedAccount ? fKes(selectedAccount.balance ?? 0) : "—", chg:null },
-    { t:"dov-sc-teal",   icon:<ArrowUpRight size={16}/>,   label:"Income",        val: fKes(stats.income),   chg:{ pos:true,  lbl: periodLabel(period) } },
-    { t:"dov-sc-rose",   icon:<ArrowDownRight size={16}/>, label:"Expenses",      val: fKes(stats.expense),  chg:{ pos:false, lbl: periodLabel(period) } },
-    { t:"dov-sc-amber",  icon:<PiggyBank size={16}/>,      label:"Net Savings",   val: fKes(Math.max(stats.net, 0)), chg:{ pos:stats.net>=0, lbl:`${stats.rate}% rate` } },
-    { t:"dov-sc-violet", icon:<Brain size={16}/>,          label:"Health Score",  val:`${hScore}/100`,       chg:{ pos:hScore>=60, lbl:hLabel } },
-    { t:"dov-sc-navy",   icon:<Calendar size={16}/>,       label:"Days Left",     val:`${new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate() - new Date().getDate()} days`, chg:{ pos:true, lbl:format(new Date(),"MMMM") } },
+    { t:"dov-sc-blue",   icon:<Wallet size={16}/>,         label:"Balance",      val: selectedAccount ? fKes(selectedAccount.balance ?? 0) : "—",    chg:null },
+    { t:"dov-sc-teal",   icon:<ArrowUpRight size={16}/>,   label:"Income",       val: fKes(stats.income),                chg:{ pos:true,           lbl: periodLabel(period) } },
+    { t:"dov-sc-rose",   icon:<ArrowDownRight size={16}/>, label:"Expenses",     val: fKes(stats.expense),               chg:{ pos:false,          lbl: periodLabel(period) } },
+    { t:"dov-sc-amber",  icon:<PiggyBank size={16}/>,      label:"Net Savings",  val: fKes(Math.max(stats.net, 0)),      chg:{ pos:stats.net>=0,   lbl:`${stats.rate}% rate` } },
+    { t:"dov-sc-violet", icon:<Brain size={16}/>,          label:"Health Score", val:`${hScore}/100`,                    chg:{ pos:hScore>=60,     lbl:hLabel } },
+    { t:"dov-sc-navy",   icon:<Calendar size={16}/>,       label:"Days Left",    val:`${daysLeft} days`,                 chg:{ pos:true,           lbl:format(new Date(),"MMMM") } },
   ];
 
-  // ── CHART TOOLTIP STYLE ───────────────────────────────────────────────────
   const tooltipStyle = { background:"#0f2552", border:"1px solid rgba(56,189,248,.2)", borderRadius:12, fontSize:12 };
 
-  // ── RENDER ────────────────────────────────────────────────────────────────
+  // ── RENDER ───────────────────────────────────────────────────────────────
   return (
     <div className="dov-root">
       <style dangerouslySetInnerHTML={{ __html: styles }}/>
 
-      {/* ── §13.1  VIEW-ALL MODAL ── */}
+      {/* VIEW-ALL MODAL */}
       {showModal && (
         <ViewAllModal
           transactions={accountTransactions}
@@ -1024,7 +1017,7 @@ export function DashboardOverview({ accounts, transactions }) {
         />
       )}
 
-      {/* ── §13.2  HEADER ── */}
+      {/* HEADER */}
       <div className="dov-header">
         <div>
           <h2 className="dov-greeting">Welcome back, <span>{user?.firstName || "there"}</span> 👋</h2>
@@ -1034,25 +1027,23 @@ export function DashboardOverview({ accounts, transactions }) {
           <button className="dov-balance-toggle" title={hideBalance?"Show balances":"Hide balances"} onClick={() => setHideBalance(v => !v)}>
             {hideBalance ? <EyeOff size={15}/> : <Eye size={15}/>}
           </button>
-          {/* Period tabs */}
           <div className="dov-period-tabs">
             {PERIODS.map(p => (
               <button key={p.key} className={`dov-tab ${period===p.key?"active":""}`} onClick={() => setPeriod(p.key)}>{p.label}</button>
             ))}
           </div>
-          {/* Account selector — original */}
           <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
             <SelectTrigger className="w-[140px]" style={{ borderRadius:10, fontSize:13 }}>
               <SelectValue placeholder="Select account"/>
             </SelectTrigger>
             <SelectContent>
-              {accounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              {(accounts || []).map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* ── §13.3  STAT CARDS ── */}
+      {/* STAT CARDS */}
       <div className="dov-stat-grid">
         {statCards.map((sc, i) => (
           <div key={i} className={`dov-stat-card ${sc.t}`} style={{ animationDelay:`${i*.07}s` }}>
@@ -1070,12 +1061,10 @@ export function DashboardOverview({ accounts, transactions }) {
         ))}
       </div>
 
-      {/* ── §13.4  MAIN CONTENT GRID ── */}
+      {/* MAIN GRID */}
       <div className="dov-main-grid">
 
-        {/* ┌─────────────────────────────────────────────────┐ */}
-        {/* │  6-MONTH CASH FLOW TREND (full width dark card) │ */}
-        {/* └─────────────────────────────────────────────────┘ */}
+        {/* 6-MONTH TREND */}
         <div className="dov-dark-card dov-full-row">
           <div className="dov-dark-header">
             <div className="dov-dark-title">
@@ -1092,7 +1081,8 @@ export function DashboardOverview({ accounts, transactions }) {
               </div>
               <div className="dov-period-tabs" style={{ background:"rgba(255,255,255,.07)" }}>
                 {["area","bar","line"].map(ct => (
-                  <button key={ct} className={`dov-tab ${chartType===ct?"active":""}`}
+                  <button key={ct}
+                    className={`dov-tab ${chartType===ct?"active":""}`}
                     style={chartType===ct ? { background:"rgba(255,255,255,.15)", color:"white" } : { color:"#64748b" }}
                     onClick={() => setChartType(ct)}>
                     {ct.charAt(0).toUpperCase()+ct.slice(1)}
@@ -1147,9 +1137,7 @@ export function DashboardOverview({ accounts, transactions }) {
           </div>
         </div>
 
-        {/* ┌──────────────────────────────────────────────┐ */}
-        {/* │  WEEKLY SPENDING PATTERN (dark half-card)    │ */}
-        {/* └──────────────────────────────────────────────┘ */}
+        {/* WEEKLY SPEND PATTERN */}
         <div className="dov-dark-card">
           <div className="dov-dark-header">
             <div className="dov-dark-title"><BarChart2 size={13} color="#38bdf8"/> Weekly Spend Pattern</div>
@@ -1169,9 +1157,7 @@ export function DashboardOverview({ accounts, transactions }) {
           </div>
         </div>
 
-        {/* ┌──────────────────────────────────────────────────────┐ */}
-        {/* │  SPENDING CALENDAR HEATMAP (dark half-card)          │ */}
-        {/* └──────────────────────────────────────────────────────┘ */}
+        {/* CALENDAR HEATMAP */}
         <div className="dov-dark-card">
           <div className="dov-dark-header">
             <div className="dov-dark-title"><Calendar size={13} color="#38bdf8"/> 28-Day Spending Heatmap</div>
@@ -1179,9 +1165,7 @@ export function DashboardOverview({ accounts, transactions }) {
           <CalendarHeatmap heatmapData={heatmapData}/>
         </div>
 
-        {/* ┌──────────────────────────────────────────────────────────────┐ */}
-        {/* │  LEFT TABBED CARD: Recent Transactions | Recurring | Budget  │ */}
-        {/* └──────────────────────────────────────────────────────────────┘ */}
+        {/* LEFT TABBED CARD */}
         <div className="dov-card">
           <div className="dov-card-header">
             <div className="dov-period-tabs" style={{ padding:"3px", borderRadius:10 }}>
@@ -1200,7 +1184,6 @@ export function DashboardOverview({ accounts, transactions }) {
             )}
           </div>
 
-          {/* Recent Transactions */}
           {leftCardTab === "recent" && (
             <div style={{ padding:"12px 0 6px" }}>
               {recentTransactions.length === 0 ? (
@@ -1227,16 +1210,11 @@ export function DashboardOverview({ accounts, transactions }) {
             </div>
           )}
 
-          {/* Recurring Transactions */}
           {leftCardTab === "recurring" && <RecurringPanel recurring={recurring} hideBalance={hideBalance}/>}
-
-          {/* Budget Panel */}
-          {leftCardTab === "budget" && <BudgetPanel budgets={budgets} hideBalance={hideBalance}/>}
+          {leftCardTab === "budget"    && <BudgetPanel    budgets={budgets}     hideBalance={hideBalance}/>}
         </div>
 
-        {/* ┌──────────────────────────────────────────────────────────────┐ */}
-        {/* │  RIGHT TABBED CARD: Expense Breakdown | Comparison | Goals   │ */}
-        {/* └──────────────────────────────────────────────────────────────┘ */}
+        {/* RIGHT TABBED CARD */}
         <div className="dov-card">
           <div className="dov-card-header">
             <div className="dov-period-tabs" style={{ padding:"3px", borderRadius:10 }}>
@@ -1256,13 +1234,11 @@ export function DashboardOverview({ accounts, transactions }) {
             )}
           </div>
 
-          {/* Expense Breakdown — original pie + category bars */}
           {rightCardTab === "breakdown" && (
             pieChartData.length === 0 ? (
               <EmptyState icon="📊" message="No expenses this month"/>
             ) : (
               <>
-                {/* Original Pie Chart — untouched */}
                 <div style={{ height:200, padding:"8px 0 0" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -1276,7 +1252,6 @@ export function DashboardOverview({ accounts, transactions }) {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                {/* Category bars */}
                 <div style={{ padding:"4px 0 14px" }}>
                   {categoryBars.map((c, i) => (
                     <div key={i} className="dov-cat-row" style={{ animationDelay:`${i*.07}s` }}>
@@ -1294,21 +1269,14 @@ export function DashboardOverview({ accounts, transactions }) {
             )
           )}
 
-          {/* Month Comparison */}
           {rightCardTab === "comparison" && <ComparisonPanel txs={accountTransactions} hideBalance={hideBalance}/>}
-
-          {/* Savings Goals */}
-          {rightCardTab === "goals" && <SavingsGoalsPanel netSavings={stats.net} expense={stats.expense} hideBalance={hideBalance}/>}
+          {rightCardTab === "goals"      && <SavingsGoalsPanel netSavings={stats.net} expense={stats.expense} hideBalance={hideBalance}/>}
         </div>
 
-        {/* ┌──────────────────────────────────────────────────────────────┐ */}
-        {/* │  AI INTELLIGENCE PANEL (full width)                          │ */}
-        {/* │  Tabs: Insights | Predictions | Alerts                       │ */}
-        {/* └──────────────────────────────────────────────────────────────┘ */}
+        {/* AI INTELLIGENCE PANEL */}
         <div className="dov-full-row">
           <div className="dov-ai-section">
 
-            {/* AI Header + Health Score Widget */}
             <div className="dov-ai-top">
               <div className="dov-ai-brain">🧠</div>
               <div>
@@ -1326,13 +1294,15 @@ export function DashboardOverview({ accounts, transactions }) {
                 </div>
                 <div className="dov-health-bars">
                   {[
-                    { name:"Savings Rate",     val: stats.rate,                                                color:"#4ECDC4" },
-                    { name:"Expense Control",  val: stats.income>0?Math.round((1-stats.expense/stats.income)*100):0, color:"#45B7D1" },
-                    { name:"Tx Activity",      val: Math.min(accountTransactions.length * 3, 100),             color:"#96CEB4" },
+                    { name:"Savings Rate",    val: stats.rate,                                                                color:"#4ECDC4" },
+                    { name:"Expense Control", val: stats.income>0?Math.round((1-stats.expense/stats.income)*100):0,           color:"#45B7D1" },
+                    { name:"Tx Activity",     val: Math.min(accountTransactions.length * 3, 100),                             color:"#96CEB4" },
                   ].map((h, i) => (
                     <div key={i} className="dov-hbar">
                       <div className="dov-hbar-name">{h.name}</div>
-                      <div className="dov-hbar-track"><div className="dov-hbar-fill" style={{ width:`${Math.max(h.val,0)}%`, background:h.color }}/></div>
+                      <div className="dov-hbar-track">
+                        <div className="dov-hbar-fill" style={{ width:`${Math.max(h.val,0)}%`, background:h.color }}/>
+                      </div>
                       <div className="dov-hbar-val">{Math.max(h.val, 0)}%</div>
                     </div>
                   ))}
@@ -1340,14 +1310,12 @@ export function DashboardOverview({ accounts, transactions }) {
               </div>
             </div>
 
-            {/* AI Tabs */}
             <div className="dov-ai-tabs-row">
               {AI_TABS.map(t => (
                 <button key={t.key} className={`dov-ai-tab ${aiTab===t.key?"active":""}`} onClick={() => setAiTab(t.key)}>{t.label}</button>
               ))}
             </div>
 
-            {/* ── AI Tab: Recommendations ── */}
             {aiTab === "recommendations" && (
               <div className="dov-rec-grid">
                 {aiRecs.map((r, i) => (
@@ -1362,7 +1330,6 @@ export function DashboardOverview({ accounts, transactions }) {
               </div>
             )}
 
-            {/* ── AI Tab: Predictions ── */}
             {aiTab === "predictions" && (
               <div className="dov-predict-list">
                 {aiPreds.map((p, i) => (
@@ -1379,7 +1346,6 @@ export function DashboardOverview({ accounts, transactions }) {
               </div>
             )}
 
-            {/* ── AI Tab: Alerts ── */}
             {aiTab === "alerts" && (
               <div>
                 {alerts.map((a, i) => (
@@ -1391,7 +1357,11 @@ export function DashboardOverview({ accounts, transactions }) {
                     <div style={{ flex:1 }}>
                       <div className="dov-alert-title">{a.title}</div>
                       <div className="dov-alert-body">{a.body}</div>
-                      {a.kes && <div className="dov-alert-kes" style={{ color:a.level==="critical"?"#ef4444":a.level==="warning"?"#f59e0b":a.level==="success"?"#16a34a":"#1e40af" }}>{a.kes}</div>}
+                      {a.kes && (
+                        <div className="dov-alert-kes" style={{ color:a.level==="critical"?"#ef4444":a.level==="warning"?"#f59e0b":a.level==="success"?"#16a34a":"#1e40af" }}>
+                          {a.kes}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
