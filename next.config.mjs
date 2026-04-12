@@ -15,7 +15,8 @@ const nextConfig = {
     },
   },
 
-  // Suppress hydration warnings during development (optional)
+  optimizeFonts: false,
+
   onDemandEntries: {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,

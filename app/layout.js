@@ -1,11 +1,8 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
-import SmartFinanceFooter from "@/components/SmartFinanceFooter"; // ✅ Client Component
-
-const inter = Inter({ subsets: ["latin"] });
+import SmartFinanceFooter from "@/components/SmartFinanceFooter";
 
 export const metadata = {
   title: "SMARTFINANCE",
@@ -19,7 +16,7 @@ export default function RootLayout({ children }) {
         <head>
           <link rel="icon" href="/logo-sm.png" sizes="any" />
         </head>
-        <body className={`${inter.className}`}>
+        <body>
           <Header />
           <main className="min-h-screen">{children}</main>
           <Toaster richColors />

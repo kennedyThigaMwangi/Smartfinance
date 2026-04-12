@@ -4,7 +4,6 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-// Get user's budget limit and how much they've spent this month
 export async function getCurrentBudget(accountId) {
   try {
     const { userId } = await auth();
@@ -13,52 +12,50 @@ export async function getCurrentBudget(accountId) {
     const user = await db.user.findUnique({
       where: { clerkUserId: userId },
     });
+    if (!user) throw new Error("User not found");
 
-    if (!user) {
-      throw new Error("User not found");
+    const currentDate  = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth   = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+    // ✅ Parallel — fetch budget + expenses at same time
+    const [budget, expenses] = await Promise.all([
+      db.budget.findFirst({
+        where: { userId: user.id },
+      }),
+      db.transaction.aggregate({
+        where: {
+          userId:    user.id,
+          accountId,
+          type:      "EXPENSE",
+          date:      { gte: startOfMonth, lte: endOfMonth },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const currentExpenses = expenses._sum.amount
+      ? expenses._sum.amount.toNumber()
+      : 0;
+
+    const budgetAmount = budget ? budget.amount.toNumber() : 0;
+
+    // ✅ Trigger Inngest alert automatically if budget exceeded
+    if (budget && currentExpenses >= budgetAmount) {
+      try {
+        const { inngest } = await import("@/lib/inngest/client");
+        await inngest.send({
+          name: "budget/check-alerts",
+          data: { userId: user.id, accountId },
+        });
+      } catch (e) {
+        // Inngest not running — silent fail in dev
+      }
     }
 
-    // Get the budget they set
-    const budget = await db.budget.findFirst({
-      where: {
-        userId: user.id,
-      },
-    });
-
-    // Calculate current month's dates
-    const currentDate = new Date();
-    const startOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    const endOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    );
-
-    // Add up all expenses for this month
-    const expenses = await db.transaction.aggregate({
-      where: {
-        userId: user.id,
-        type: "EXPENSE",
-        date: {
-          gte: startOfMonth,
-          lte: endOfMonth,
-        },
-        accountId,
-      },
-      _sum: {
-        amount: true,
-      },
-    });
-
     return {
-      budget: budget ? { ...budget, amount: budget.amount.toNumber() } : null,
-      currentExpenses: expenses._sum.amount
-        ? expenses._sum.amount.toNumber()
-        : 0,
+      budget:          budget ? { ...budget, amount: budgetAmount } : null,
+      currentExpenses,
     };
   } catch (error) {
     console.error("Error fetching budget:", error);
@@ -66,7 +63,6 @@ export async function getCurrentBudget(accountId) {
   }
 }
 
-// User sets or updates their monthly budget limit
 export async function updateBudget(amount) {
   try {
     const { userId } = await auth();
@@ -75,21 +71,12 @@ export async function updateBudget(amount) {
     const user = await db.user.findUnique({
       where: { clerkUserId: userId },
     });
-
     if (!user) throw new Error("User not found");
 
-    // Create new budget or update existing one
     const budget = await db.budget.upsert({
-      where: {
-        userId: user.id,
-      },
-      update: {
-        amount,
-      },
-      create: {
-        userId: user.id,
-        amount,
-      },
+      where:  { userId: user.id },
+      update: { amount },
+      create: { userId: user.id, amount },
     });
 
     revalidatePath("/dashboard");

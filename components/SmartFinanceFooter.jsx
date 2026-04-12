@@ -282,14 +282,12 @@ export default function SmartFinanceFooter() {
   const companyLinks = [
     { href: "/about",    label: "About Us" },
     { href: "/team",     label: "Our Team" },
-    { href: "/careers",  label: "Careers" },
-    { href: "/blog",     label: "Blog & Updates" },
-    { href: "/partners", label: "Partners" },
+ 
+    
   ];
 
   const supportLinks = [
-    { href: "/help",        label: "Help Center" },
-    { href: "/docs",        label: "Documentation" },
+ 
     { href: "/contact",     label: "Contact Support" },
     { href: "/status",      label: "System Status" },
     { href: "/privacy",     label: "Privacy Policy" },
@@ -298,9 +296,6 @@ export default function SmartFinanceFooter() {
 
   const trustBadges = [
     { icon: "🔐", text: "256-bit SSL Encryption" },
-    { icon: "🛡️", text: "GDPR Compliant" },
-    { icon: "✅", text: "ISO 27001 Certified" },
-    { icon: "🏦", text: "Bank-Grade Security" },
     { icon: "🌍", text: "Available Worldwide" },
     { icon: "⭐", text: "4.9 / 5 User Rating" },
   ];
@@ -416,9 +411,9 @@ export default function SmartFinanceFooter() {
               <div>
                 <div className="sf-contact-label">Email Us</div>
                 <div className="sf-contact-val">
-                  <a href="mailto:hello@smartfinance.co.ke">hello@smartfinance.co.ke</a><br />
-                  <a href="mailto:support@smartfinance.co.ke">support@smartfinance.co.ke</a><br />
-                  <a href="mailto:partnerships@smartfinance.co.ke">partnerships@smartfinance.co.ke</a>
+                  <a href="kennie:hello@smartfinance.co.ke">hello@smartfinance.co.ke</a><br />
+                  <a href="kennie:support@smartfinance.co.ke">support@smartfinance.co.ke</a><br />
+                  <a href="kennie:partnerships@smartfinance.co.ke">partnerships@smartfinance.co.ke</a>
                 </div>
               </div>
             </div>

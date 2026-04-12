@@ -12,13 +12,11 @@ const aj = arcjet({
   key: process.env.ARCJET_KEY,
   characteristics: ["ip.src"],
   rules: [
-    shield({ mode: "LIVE" }),           // ✅ keep — no "requested" needed
-    detectBot({                          // ✅ keep — no "requested" needed
-      mode: "LIVE",
+    shield({ mode: process.env.NODE_ENV === "production" ? "LIVE" : "DRY_RUN" }),
+    detectBot({
+      mode: process.env.NODE_ENV === "production" ? "LIVE" : "DRY_RUN",
       allow: ["CATEGORY:SEARCH_ENGINE", "GO_HTTP"],
     }),
-    // ❌ tokenBucket REMOVED — crashes because createMiddleware
-    //    never passes `requested:` when calling protect()
   ],
 });
 

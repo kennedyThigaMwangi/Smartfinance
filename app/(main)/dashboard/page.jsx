@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { getUserAccounts, getDashboardData } from "@/actions/dashboard";
 import { getCurrentBudget } from "@/actions/budget";
 import { AccountCard } from "./_components/account-card";
@@ -9,34 +8,34 @@ import { Plus } from "lucide-react";
 import { DashboardOverview } from "./_components/transaction-overview";
 
 export default async function DashboardPage() {
-  // ── Safe fetch: Supabase free tier sleeps and can throw ──────────────────
-  let accounts = [];
+  let accounts     = [];
   let transactions = [];
+  let budgetData   = null;
 
   try {
-    [accounts, transactions] = await Promise.all([
+    // ✅ Fetch accounts + dashboard data in parallel
+    const [accountsData, dashboardData] = await Promise.all([
       getUserAccounts(),
       getDashboardData(),
     ]);
 
-    // Guarantee arrays even if actions return null/undefined
-    accounts     = accounts     ?? [];
-    transactions = transactions ?? [];
+    accounts     = accountsData              ?? [];
+    transactions = dashboardData.transactions ?? [];
+
+    // ✅ Only fetch budget if we have a default account
+    const defaultAccount = accounts.find((a) => a.isDefault);
+    if (defaultAccount) {
+      try {
+        budgetData = await getCurrentBudget(defaultAccount.id);
+      } catch (err) {
+        console.error("[DashboardPage] Failed to fetch budget:", err?.message);
+      }
+    }
   } catch (err) {
     console.error("[DashboardPage] Failed to fetch data:", err?.message);
-    // Render empty state rather than crash — DB may still be waking up
   }
 
-  const defaultAccount = accounts.find((account) => account.isDefault);
-
-  let budgetData = null;
-  if (defaultAccount) {
-    try {
-      budgetData = await getCurrentBudget(defaultAccount.id);
-    } catch (err) {
-      console.error("[DashboardPage] Failed to fetch budget:", err?.message);
-    }
-  }
+  const defaultAccount = accounts.find((a) => a.isDefault);
 
   return (
     <div className="space-y-8">
@@ -69,7 +68,7 @@ export default async function DashboardPage() {
           ))}
       </div>
 
-      {/* DB wake-up notice — only shown when accounts failed to load */}
+      {/* DB wake-up notice */}
       {accounts.length === 0 && (
         <p className="text-center text-sm text-muted-foreground py-6">
           Database is waking up — please refresh in a few seconds.
